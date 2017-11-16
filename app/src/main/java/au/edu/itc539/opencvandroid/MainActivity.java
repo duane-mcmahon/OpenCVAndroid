@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.SurfaceView;
+import android.view.Window;
 import android.view.WindowManager;
 
 import org.opencv.android.JavaCameraView;
@@ -73,7 +74,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //Remove title bar
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
 
+        //Remove notification bar
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.show_camera);
 
         // First check android version
@@ -154,25 +160,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 
-        mRgba = inputFrame.rgba();
+        return inputFrame.rgba();
 
-        int orientation = getResources().getConfiguration().orientation;
-
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-
-
-            // Rotate mRgba 90 degrees
-            Core.transpose(mRgba, mRgbaT);
-            Imgproc.resize(mRgbaT, mRgbaF, mRgbaF.size(), 0,0, 0);
-            Core.flip(mRgbaF, mRgba, 1 );
-
-        } else {
-
-
-        }
-        // TODO Auto-generated method stub
-
-
-        return mRgba; // This function must return
     }
 }
