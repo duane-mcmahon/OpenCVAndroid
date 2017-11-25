@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private boolean mIsJavaCamera = true;
     private MenuItem mItemSwitchCamera = null;
 
-    // These variables are used (at the moment) to fix camera orientation from 270degree to 0degree
+
     Mat mRgba;
     Mat mRgbaF;
     Mat mRgbaT;
@@ -52,8 +52,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                 {
+
                     Log.i(TAG, "OpenCV loaded successfully");
+
                     mOpenCvCameraView.enableView();
+
                 } break;
                 default:
                 {
