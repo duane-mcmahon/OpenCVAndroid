@@ -84,11 +84,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
                     try {
                         // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(R.raw.banana_classifier);
+                        InputStream is = getResources().openRawResource(R.raw.orange_classifier);
 
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
 
-                        mCascadeFile = new File(cascadeDir, "banana_classifier.xml");
+                        mCascadeFile = new File(cascadeDir, "orange_classifier.xml");
 
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
