@@ -1,7 +1,12 @@
 package au.edu.itc539.opencvandroid;
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -9,8 +14,11 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
+import android.widget.Toast;
 // OpenCV Classes
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.BaseLoaderCallback;
@@ -34,8 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 
-
-public class MainActivity extends AppCompatActivity implements CvCameraViewListener2 {
+public class MainActivity extends AppCompatActivity implements CvCameraViewListener2, SensorEventListener {
 
     Scalar RED = new Scalar(255, 0, 0);
 
@@ -67,6 +74,18 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private float mRelativeFruitSize = 0.2f;
 
     private int mAbsoluteFruitSize = 0;
+
+    private TextView portrait_label, landscape_label;
+
+    private CustTextView rev_landscape_label;
+
+    private SensorManager mSensorManager;
+
+    private Sensor mRotationSensor;
+
+    private static final int SENSOR_DELAY = 500 * 1000; // 500ms
+
+    private static final int FROM_RADS_TO_DEGS = -57;
 
 
 
@@ -142,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         mDetectorName[JAVA_DETECTOR] = "Java";
 
+
     }
 
 
@@ -195,6 +215,36 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
 
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+        portrait_label = findViewById(R.id.fruit_target_portrait);
+
+        landscape_label = findViewById(R.id.fruit_target_landscape);
+
+        rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
+
+        portrait_label.setText("banana");
+
+        landscape_label.setText("banana");
+
+        rev_landscape_label.setText("banana");
+
+
+        // Get an instance of the SensorManager
+        try {
+
+            mSensorManager = (SensorManager) getSystemService(Activity.SENSOR_SERVICE);
+
+            mRotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+
+            mSensorManager.registerListener(this, mRotationSensor, SENSOR_DELAY);
+
+        } catch (Exception e) {
+
+            Toast.makeText(this, "Hardware compatibility issue", Toast.LENGTH_LONG).show();
+
+        }
+
+
     }
 
     @Override
@@ -204,6 +254,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+
+        mSensorManager.unregisterListener(this);
     }
 
     @Override
@@ -217,6 +269,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         } else {
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
+
+
+        if (mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() != 0) {
+            Sensor s = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
+            mSensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
         }
 
     }
@@ -275,6 +333,79 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             Imgproc.rectangle(mRgba, bananaArray[i].tl(), bananaArray[i].br(), RED, 3);
 
         return mRgba;
+
+    }
+
+    private void update(float[] vectors) {
+
+        float[] rotationMatrix = new float[9];
+
+        SensorManager.getRotationMatrixFromVector(rotationMatrix, vectors);
+
+        int worldAxisX = SensorManager.AXIS_X;
+
+        int worldAxisZ = SensorManager.AXIS_Z;
+
+        float[] adjustedRotationMatrix = new float[9];
+
+        SensorManager.remapCoordinateSystem(rotationMatrix, worldAxisX, worldAxisZ, adjustedRotationMatrix);
+
+        float[] orientation = new float[3];
+
+        SensorManager.getOrientation(adjustedRotationMatrix, orientation);
+
+        //    float pitch = orientation[1] * FROM_RADS_TO_DEGS;
+
+        float roll = orientation[2] * FROM_RADS_TO_DEGS;    // relevant
+
+        if ((roll >= 70 && roll <= 180)) {
+
+            portrait_label.setVisibility(View.GONE);
+
+            landscape_label.setVisibility(View.VISIBLE);
+
+            rev_landscape_label.setVisibility(View.GONE);
+
+
+        } else if (roll >= -180 && roll <= -70) {
+
+            portrait_label.setVisibility(View.GONE);
+
+            landscape_label.setVisibility(View.GONE);
+
+            rev_landscape_label.setVisibility(View.VISIBLE);
+
+        } else {
+
+            portrait_label.setVisibility(View.VISIBLE);
+
+            landscape_label.setVisibility(View.GONE);
+
+            rev_landscape_label.setVisibility(View.GONE);
+
+        }
+
+
+    }
+
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+        if (event.sensor == mRotationSensor) {
+            if (event.values.length > 4) {
+                float[] truncatedRotationVector = new float[4];
+                System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
+                update(truncatedRotationVector);
+            } else {
+                update(event.values);
+            }
+        }
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
 }
