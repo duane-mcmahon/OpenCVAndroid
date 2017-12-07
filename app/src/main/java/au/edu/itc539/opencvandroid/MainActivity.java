@@ -81,14 +81,16 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
                     // Load native library after(!) OpenCV initialization
                     // System.loadLibrary("detection_based_tracker");
+                    String fruit_classifier = "banana_classifier";
 
                     try {
                         // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(R.raw.orange_classifier);
+                        InputStream is = getResources().openRawResource(
+                                getResources().getIdentifier(fruit_classifier, "raw", getPackageName()));
 
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
 
-                        mCascadeFile = new File(cascadeDir, "orange_classifier.xml");
+                        mCascadeFile = new File(cascadeDir, fruit_classifier + ".xml");
 
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
