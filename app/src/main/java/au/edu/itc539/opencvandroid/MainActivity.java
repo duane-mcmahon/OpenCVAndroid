@@ -2,6 +2,7 @@ package au.edu.itc539.opencvandroid;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -48,8 +49,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     Scalar GREEN = new Scalar(0, 255, 0);
 
-    public static final int NATIVE_DETECTOR = 1;
-
     public static final int JAVA_DETECTOR = 0;
     // Used for logging success or failure messages
     private static final String TAG = "OCVFruity::MainActivity";
@@ -63,8 +62,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     private String[] mDetectorName;
 
-    // https://msdn.microsoft.com/en-us/library/azure/dn913079.aspx
-    // https://github.com/opencv/opencv/tree/master/data/haarcascades
     private CascadeClassifier mJavaDetector;
 
     private Mat mRgba;
@@ -87,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     private static final int FROM_RADS_TO_DEGS = -57;
 
-
+    private String fruit_classifier = "";
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -98,9 +95,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
                     Log.i(TAG, "OpenCV loaded successfully");
 
-                    // Load native library after(!) OpenCV initialization
-                    // System.loadLibrary("detection_based_tracker");
-                    String fruit_classifier = "banana_classifier";
+                    Intent iin = getIntent();
+                    Bundle b = iin.getExtras();
+                    fruit_classifier = (String) b.get("fruit");
+
+                    Log.i(TAG, "OpenCV loaded successfully. Fruit: " + fruit_classifier);
 
                     try {
                         // load cascade file from application resources
@@ -108,9 +107,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                                 getResources().getIdentifier(fruit_classifier, "raw", getPackageName()));
 
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-
                         mCascadeFile = new File(cascadeDir, fruit_classifier + ".xml");
-
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
                         byte[] buffer = new byte[4096];
@@ -139,10 +136,15 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                     }
 
                     mOpenCvCameraView.enableFpsMeter();
-
                     mOpenCvCameraView.setCameraIndex(0);
-
                     mOpenCvCameraView.enableView();
+
+                    portrait_label = findViewById(R.id.fruit_target_portrait);
+                    landscape_label = findViewById(R.id.fruit_target_landscape);
+                    rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
+                    portrait_label.setText(fruit_classifier);
+                    landscape_label.setText(fruit_classifier);
+                    rev_landscape_label.setText(fruit_classifier);
 
                 } break;
                 default:
@@ -158,9 +160,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Log.i(TAG, "Instantiated new " + this.getClass());
 
         mDetectorName = new String[2];
-
         mDetectorName[JAVA_DETECTOR] = "Java";
-
 
     }
 
@@ -211,31 +211,16 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
 
         mOpenCvCameraView = (JavaCameraView) findViewById(R.id.show_camera_activity_java_surface_view);
-
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-
         mOpenCvCameraView.setCvCameraViewListener(this);
 
-        portrait_label = findViewById(R.id.fruit_target_portrait);
-
-        landscape_label = findViewById(R.id.fruit_target_landscape);
-
-        rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
-
-        portrait_label.setText("banana");
-
-        landscape_label.setText("banana");
-
-        rev_landscape_label.setText("banana");
 
 
         // Get an instance of the SensorManager
         try {
 
             mSensorManager = (SensorManager) getSystemService(Activity.SENSOR_SERVICE);
-
             mRotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-
             mSensorManager.registerListener(this, mRotationSensor, SENSOR_DELAY);
 
         } catch (Exception e) {
@@ -298,7 +283,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     public void onCameraViewStopped() {
 
         mGray.release();
-
         mRgba.release();
     }
 
@@ -321,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         if (mDetectorType == JAVA_DETECTOR) {
             if (mJavaDetector != null)
-                mJavaDetector.detectMultiScale(mGray, bananas, 1.1, 2, 2,
+                mJavaDetector.detectMultiScale(mGray, bananas, 1.05, 2, 2,
                         new Size(mAbsoluteFruitSize, mAbsoluteFruitSize), new Size());
         } else {
             Log.e(TAG, "Detection method is not selected!");
@@ -361,26 +345,20 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         if ((roll >= 70 && roll <= 180)) {
 
             portrait_label.setVisibility(View.GONE);
-
             landscape_label.setVisibility(View.VISIBLE);
-
             rev_landscape_label.setVisibility(View.GONE);
 
 
         } else if (roll >= -180 && roll <= -70) {
 
             portrait_label.setVisibility(View.GONE);
-
             landscape_label.setVisibility(View.GONE);
-
             rev_landscape_label.setVisibility(View.VISIBLE);
 
         } else {
 
             portrait_label.setVisibility(View.VISIBLE);
-
             landscape_label.setVisibility(View.GONE);
-
             rev_landscape_label.setVisibility(View.GONE);
 
         }
