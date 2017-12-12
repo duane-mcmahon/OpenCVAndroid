@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                         Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
                     }
 
-                    mOpenCvCameraView.enableFpsMeter();
+                    //  mOpenCvCameraView.enableFpsMeter();
                     mOpenCvCameraView.setCameraIndex(0);
                     mOpenCvCameraView.enableView();
 

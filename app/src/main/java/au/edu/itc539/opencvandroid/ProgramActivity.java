@@ -91,7 +91,7 @@ public class ProgramActivity extends Activity implements View.OnClickListener {
 
         List<String> l = new ArrayList<String>(data.keySet());
 
-        intent.putExtra("fruit", "banana");
+        intent.putExtra("fruit", "orange");
 
         startActivity(intent);
 
