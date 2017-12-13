@@ -16,12 +16,13 @@
         opencv:show_fps="true"
         opencv:camera_id="any" />
 
-    <TextView
+    <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/fruit_target_portrait"
         android:text="My Label"
-        android:layout_gravity="center|right"
+        android:layout_gravity="center"
+        android:src="@drawable/rotateleft"
         android:rotation="-90"
         android:textSize="40dp" />
 
@@ -29,13 +30,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/fruit_target_landscape"
-        android:layout_gravity="bottom|center"
+        android:layout_gravity="bottom|left"
+        android:background="@android:color/holo_orange_dark"
         android:textSize="40dp" />
 
     <au.edu.itc539.opencvandroid.CustTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/fruit_target_reverse_landscape"
-        android:layout_gravity="top|center"
+        android:layout_gravity="top|right"
+        android:background="@android:color/holo_orange_dark"
         android:textSize="40dp" />
 </FrameLayout>
