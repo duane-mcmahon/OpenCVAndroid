@@ -3,6 +3,7 @@ package au.edu.itc539.opencvandroid;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -10,9 +11,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
+import android.graphics.BitmapFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,6 +70,8 @@ public class ProgramActivity extends Activity implements View.OnClickListener {
         lv.setAdapter(new CustomAdapter(data));
 
         launchCameraActivityButton = findViewById(R.id.nextButton);
+
+        launchCameraActivityButton.setImageBitmap(doEmboss(BitmapFactory.decodeResource(getResources(), R.drawable.play)));
 
         launchCameraActivityButton.setOnClickListener(this);
 
@@ -131,6 +132,23 @@ public class ProgramActivity extends Activity implements View.OnClickListener {
     protected void onStop() {
         super.onStop();
         Log.i(DEBUG_TAG, "OnStop()");
+    }
+
+    public Bitmap doEmboss(Bitmap src) {
+        // set Emboss configuration
+        double[][] EmbossConfig = new double[][]{
+                {-1, 0, -1},
+                {0, 4, 0},
+                {-1, 0, -1}
+        };
+        //create convolution matrix instance
+        ConvolutionMatrix convMatrix = new ConvolutionMatrix(3);
+        //apply configuration
+        convMatrix.applyConfig(EmbossConfig);
+        // set weight of factor and offset
+        convMatrix.Factor = 1;
+        convMatrix.Offset = 140;
+        return ConvolutionMatrix.computeConvolution3x3(src, convMatrix);
     }
 
 }
