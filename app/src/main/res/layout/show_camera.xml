@@ -63,15 +63,13 @@
         android:text="My Label"
         android:layout_gravity="center"
         android:src="@drawable/rote90"
-        android:rotation="-90"
-        android:textSize="40dp" />
+        android:rotation="-90" />
 
 
-    <au.edu.itc539.opencvandroid.CustTextView
+    <au.edu.itc539.opencvandroid.CustView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/fruit_target_reverse_landscape"
-        android:layout_gravity="top|right"
-        android:background="@android:color/transparent"
-        android:textSize="40dp" />
+        android:layout_gravity="center"
+        android:src="@drawable/rote180" />
 </FrameLayout>

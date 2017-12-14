@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Matrix;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     private TextView landscape_label;
 
-    private CustTextView rev_landscape_label;
+    private ImageView rev_landscape_label;
 
     private SensorManager mSensorManager;
 
@@ -148,14 +149,13 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                         Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
                     }
 
-                    //  mOpenCvCameraView.enableFpsMeter();
-
-
                     portrait_label = findViewById(R.id.fruit_target_portrait);
+
                     landscape_label = findViewById(R.id.fruit_target_landscape);
-                    rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
+
                     landscape_label.setText(fruit_classifier);
-                    rev_landscape_label.setText(fruit_classifier);
+
+                    rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
 
 
                 } break;
