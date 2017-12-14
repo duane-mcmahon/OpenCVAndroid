@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:opencv="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="au.edu.itc539.opencvandroid.ProgramActivity"
     android:orientation="vertical"
@@ -8,34 +9,67 @@
     android:layout_height="match_parent"
     android:clipChildren="false">
 
-    <org.opencv.android.JavaCameraView
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
-        android:id="@+id/show_camera_activity_java_surface_view"
-        opencv:show_fps="true"
-        opencv:camera_id="any" />
 
-    <TextView
+        android:background="@android:color/transparent">
+
+        <org.opencv.android.JavaCameraView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:id="@+id/show_camera_activity_java_surface_view"
+            opencv:show_fps="true"
+            opencv:camera_id="any" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/fruit_target_landscape"
+                android:background="@android:color/transparent"
+                android:textColor="@color/Black"
+                android:shadowColor="@color/TransparentGrey"
+                android:shadowDx="-2"
+                android:shadowDy="-2"
+                android:shadowRadius="1"
+                android:textSize="40dp" />
+
+            <com.wang.avi.AVLoadingIndicatorView
+                android:id="@+id/avi"
+                style="@style/AVLoadingIndicatorView.Small"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/fruit_target_landscape"
+                android:paddingTop="30dp"
+                app:indicatorColor="@color/Black"
+                android:shadowColor="@color/TransparentGrey"
+                app:indicatorName="BallPulseIndicator" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+
+    <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/fruit_target_portrait"
         android:text="My Label"
-        android:layout_gravity="center|right"
-        android:rotation="-90"
-        android:textSize="40dp" />
+        android:layout_gravity="center"
+        android:src="@drawable/rote90"
+        android:rotation="-90" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/fruit_target_landscape"
-        android:layout_gravity="bottom|center"
-        android:textSize="40dp" />
 
-    <au.edu.itc539.opencvandroid.CustTextView
+    <au.edu.itc539.opencvandroid.CustView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/fruit_target_reverse_landscape"
-        android:layout_gravity="top|center"
-        android:textSize="40dp" />
+        android:layout_gravity="center"
+        android:src="@drawable/rote180" />
 </FrameLayout>

@@ -1,15 +1,21 @@
 package au.edu.itc539.opencvandroid;
 import android.Manifest;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.graphics.Color;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Matrix;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +24,10 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+
+import com.wang.avi.AVLoadingIndicatorView;
+
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 // OpenCV Classes
@@ -72,9 +82,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     private int mAbsoluteFruitSize = 0;
 
-    private TextView portrait_label, landscape_label;
+    private ImageView portrait_label;
 
-    private CustTextView rev_landscape_label;
+    private TextView landscape_label;
+
+    private ImageView rev_landscape_label;
 
     private SensorManager mSensorManager;
 
@@ -85,6 +97,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private static final int FROM_RADS_TO_DEGS = -57;
 
     private String fruit_classifier = "";
+
+    private AVLoadingIndicatorView avi;
+
+
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -126,8 +142,6 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                         } else
                             Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
 
-                        //   mNativeDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
-
                         cascadeDir.delete();
 
                     } catch (IOException e) {
@@ -135,16 +149,14 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
                         Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
                     }
 
-                    //  mOpenCvCameraView.enableFpsMeter();
-                    mOpenCvCameraView.setCameraIndex(0);
-                    mOpenCvCameraView.enableView();
-
                     portrait_label = findViewById(R.id.fruit_target_portrait);
+
                     landscape_label = findViewById(R.id.fruit_target_landscape);
-                    rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
-                    portrait_label.setText(fruit_classifier);
+
                     landscape_label.setText(fruit_classifier);
-                    rev_landscape_label.setText(fruit_classifier);
+
+                    rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
+
 
                 } break;
                 default:
@@ -154,6 +166,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
             }
         }
     };
+
 
     public MainActivity() {
 
@@ -170,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //Remove title bar
@@ -177,7 +191,18 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         //Remove notification bar
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.show_camera);
+
+        mOpenCvCameraView = (JavaCameraView) findViewById(R.id.show_camera_activity_java_surface_view);
+
+        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+
+        mOpenCvCameraView.setCvCameraViewListener(this);
+
+        mOpenCvCameraView.setCameraIndex(0);
+
+        mOpenCvCameraView.enableView();
 
         // First check android version
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -207,14 +232,8 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
                 }
             }
+
         }
-
-
-        mOpenCvCameraView = (JavaCameraView) findViewById(R.id.show_camera_activity_java_surface_view);
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-        mOpenCvCameraView.setCvCameraViewListener(this);
-
-
 
         // Get an instance of the SensorManager
         try {
@@ -229,6 +248,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         }
 
+        avi = findViewById(R.id.avi);
+
+        avi.show();
 
     }
 
@@ -284,6 +306,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         mGray.release();
         mRgba.release();
+
     }
 
 
@@ -342,30 +365,35 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         float roll = orientation[2] * FROM_RADS_TO_DEGS;    // relevant
 
-        if ((roll >= 70 && roll <= 180)) {
+        if ((roll >= 70 && roll <= 135)) {
 
             portrait_label.setVisibility(View.GONE);
             landscape_label.setVisibility(View.VISIBLE);
+            avi.setVisibility(View.VISIBLE);
             rev_landscape_label.setVisibility(View.GONE);
 
+        }
 
-        } else if (roll >= -180 && roll <= -70) {
+        if (roll >= -180 && roll <= -70) {
 
             portrait_label.setVisibility(View.GONE);
             landscape_label.setVisibility(View.GONE);
+            avi.setVisibility(View.GONE);
             rev_landscape_label.setVisibility(View.VISIBLE);
 
-        } else {
+        }
+
+        if (roll <= -320 || (roll >= 0 && roll <= 45)) {
 
             portrait_label.setVisibility(View.VISIBLE);
             landscape_label.setVisibility(View.GONE);
+            avi.setVisibility(View.GONE);
             rev_landscape_label.setVisibility(View.GONE);
 
         }
 
 
     }
-
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -384,6 +412,5 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
     }
 }
