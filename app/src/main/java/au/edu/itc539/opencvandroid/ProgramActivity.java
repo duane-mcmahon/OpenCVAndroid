@@ -13,10 +13,8 @@ import android.widget.ListView;
 
 import android.graphics.BitmapFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -88,11 +86,11 @@ public class ProgramActivity extends Activity implements View.OnClickListener {
     public void onClick(View v) {
 
 
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, BananaActivity.class);
 
-        List<String> l = new ArrayList<String>(data.keySet());
+        //     List<String> l = new ArrayList<String>(data.keySet());
 
-        intent.putExtra("fruit", "orange");
+        //     intent.putExtra("fruit", "orange");
 
         startActivity(intent);
 
