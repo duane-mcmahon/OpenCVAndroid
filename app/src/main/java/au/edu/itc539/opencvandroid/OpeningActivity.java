@@ -49,8 +49,6 @@ public class OpeningActivity extends Activity {
 
     int Y_TERM = 920;
 
-    OpeningActivity() {
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
