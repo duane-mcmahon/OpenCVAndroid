@@ -182,6 +182,7 @@ public class OpeningActivity extends Activity {
 
             if (orange.contains((int) x, (int) y)) {
                 // use the coordinates for whatever
+                Log.i("TAG", "Orange Clicked");
                 imageSwitcher.setImageResource(R.drawable.orange_selected);
 
                 state.setText("orange");
