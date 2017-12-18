@@ -1,11 +1,37 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light">
+    <style name="AppBaseTheme" parent="Theme.AppCompat.Light">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
     </style>
+
+    <style name="AppBaseTheme.SplashActivity">
+        <!-- Opening theme-->
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
+
+    <style name="AppBaseTheme.OpeningActivity">
+        <!-- Opening theme-->
+        <item name="android:windowBackground">@color/colorPrimary</item>
+    </style>
+
+    <!-- Banana theme. -->
+    <style name="AppBaseTheme.BananaActivity">
+        <!-- Banana themed. -->
+        <item name="android:windowBackground">@color/colorPrimary</item>
+
+    </style>
+
+    <!-- Orange theme. -->
+    <style name="AppBaseTheme.OrangeActivity">
+        <!-- Orange themed. -->
+
+        <item name="android:windowBackground">@color/colorPrimary</item>
+    </style>
+
 
 </resources>
