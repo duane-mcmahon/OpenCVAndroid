@@ -3,6 +3,7 @@ package au.edu.itc539.opencvandroid;
 import android.app.ActionBar;
 import android.app.Activity;
 
+import android.content.Context;
 import android.content.Intent;
 
 import android.graphics.Rect;
@@ -11,21 +12,21 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
+
 import android.widget.ViewSwitcher;
 
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class OpeningActivity extends Activity {
@@ -39,15 +40,30 @@ public class OpeningActivity extends Activity {
     private ImageView opening_view;
     private TextView state;
     final Handler handler = new Handler();
+    static DisplayMetrics m;
+    static int DEVICE_DENSITY_DPI;
+
+    int X_ORIGIN = 115;
+
+    int Y_ORIGIN = 450;
+
+    int X_TERM = 380;
+
+    int Y_TERM = 920;
+
+    OpeningActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
 
         Log.i(DEBUG_TAG, "Called onCreate of OpeningActivity...");
 
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.show_opening);
+
 
         state = findViewById(R.id.select);
 
@@ -72,18 +88,42 @@ public class OpeningActivity extends Activity {
         opening_view.setOnClickListener(clickListener);
 
         Animation in = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+
         imageSwitcher.setInAnimation(in);
-        //imageSwitcher.setOutAnimation(out);
+
+        final WindowManager w = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+        final Display d = w.getDefaultDisplay();
+        DisplayMetrics m = new DisplayMetrics();
+        d.getMetrics(m);
+        DEVICE_DENSITY_DPI = m.densityDpi;
+
+        /**
+         * https://stackoverflow.com/questions/20797344/units-in-rect-class
+         * https://developer.android.com/guide/practices/screens_support.html#screen-independence
+         * Strategy required to scale accurately to devices with different DPI
+         * densities. I began this on the wrong foot by using harcoded pixel values.
+         * (moto z play = xxhdpi)
+         */
 
         // Define clickable areas
+        //   if (DEVICE_DENSITY_DPI != 480){
 
-        banana = new Rect(115, 450, 380, 920);
+        // X_ORIGIN = convertDpToPixel(115);
 
+        // Y_ORIGIN = convertDpToPixel(450);
+
+        // X_TERM = convertDpToPixel(380);
+
+        // Y_TERM = convertDpToPixel(920);
+
+
+        //   }
+
+
+        banana = new Rect(X_ORIGIN, Y_ORIGIN, X_TERM, Y_TERM);
+
+        // see preceding comments
         orange = new Rect(538, 462, 750, 643);
-
-
-
-
 
     }
 
@@ -173,8 +213,18 @@ public class OpeningActivity extends Activity {
         }
     };
 
+    // https://stackoverflow.com/questions/4605527/converting-pixels-to-dp
 
-
+    /**
+     * public static float dpFromPx(final float px) {
+     * return px / m.density;
+     * }
+     * // https://stackoverflow.com/questions/4605527/converting-pixels-to-dp
+     * public static float pxFromDp(final Context context, final float dp) {
+     * return dp * m.density;
+     * }
+     **/
+ 
     @Override
     protected void onDestroy() {
         super.onDestroy();
