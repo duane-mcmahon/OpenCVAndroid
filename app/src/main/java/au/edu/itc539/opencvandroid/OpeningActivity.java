@@ -1,6 +1,6 @@
 package au.edu.itc539.opencvandroid;
 
-import android.app.ActionBar;
+
 import android.app.Activity;
 
 import android.content.Context;
@@ -8,8 +8,7 @@ import android.content.Intent;
 
 import android.graphics.Rect;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
@@ -26,7 +25,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import android.widget.ViewSwitcher;
-
 
 
 public class OpeningActivity extends Activity {
@@ -224,7 +222,7 @@ public class OpeningActivity extends Activity {
      * return dp * m.density;
      * }
      **/
- 
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -260,7 +258,6 @@ public class OpeningActivity extends Activity {
         super.onStop();
         Log.i(DEBUG_TAG, "OnStop()");
     }
-
 
 
 }

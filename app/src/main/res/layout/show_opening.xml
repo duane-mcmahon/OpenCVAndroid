@@ -1,8 +1,9 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/colorPrimary">
+    android:background="@color/Black">
 
     <TextView
         android:id="@+id/textView1"
@@ -10,31 +11,56 @@
         android:layout_height="wrap_content"
         android:textSize="40dp"
         android:textStyle="bold"
-        android:text="Fruit Identifier App"
+
         android:layout_marginTop="15dp"
         android:layout_marginLeft="5dp"
         android:layout_marginRight="5dp"
+
         android:background="@android:color/transparent" />
 
-
-    <ImageView
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/opening_background"
+
+        android:background="@android:color/transparent">
+
+        <ImageSwitcher
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/opening_image"
         android:text="My Label"
+            android:scaleType="fitCenter" />
 
-        android:src="@drawable/theme_image" />
-
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/select"
         android:text="SELECT"
         android:textSize="40dp"
+        android:textColor="@color/White"
         android:textStyle="bold"
         android:layout_marginBottom="15dp"
         android:background="@android:color/transparent"
         android:layout_gravity="bottom|center" />
 
+            <com.wang.avi.AVLoadingIndicatorView
+                android:id="@+id/avi_opening"
+                style="@style/AVLoadingIndicatorView.Small"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/select"
+                android:paddingTop="30dp"
+                android:shadowColor="@color/TransparentGrey"
+                app:indicatorName="BallPulseIndicator" />
+
+
+        </RelativeLayout>
+
+    </RelativeLayout>
 
 </FrameLayout>
