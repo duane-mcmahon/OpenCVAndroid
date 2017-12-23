@@ -1,21 +1,20 @@
 package au.edu.itc539.opencvandroid;
 import android.Manifest;
-import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
-import android.graphics.Color;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Matrix;
+import android.graphics.Bitmap;
+import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +26,7 @@ import android.view.WindowManager;
 
 import com.wang.avi.AVLoadingIndicatorView;
 
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,9 +38,12 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -51,20 +54,27 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Map;
 
 
-public class MainActivity extends AppCompatActivity implements CvCameraViewListener2, SensorEventListener {
+public class MainActivity extends AppCompatActivity implements CvCameraViewListener2, SensorEventListener, Camera.PictureCallback {
 
     Scalar RED = new Scalar(255, 0, 0);
 
     Scalar GREEN = new Scalar(0, 255, 0);
+
+    private Hashtable<Integer, Integer> rectBuckts = new Hashtable<Integer, Integer>();
+    private Hashtable<Integer, Rect> rectCue = new Hashtable<Integer, Rect>();
 
     public static final int JAVA_DETECTOR = 0;
     // Used for logging success or failure messages
     private static final String TAG = "OCVFruity::MainActivity";
 
     // Loads camera view of OpenCV for us to use. This lets us see using OpenCV
-    private CameraBridgeViewBase mOpenCvCameraView;
+    private JavaCameraView mOpenCvCameraView;
 
     private File mCascadeFile;
 
@@ -88,6 +98,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     private ImageView rev_landscape_label;
 
+    private ImageView iv;
+
+    private ImageButton nxt;
+
     private SensorManager mSensorManager;
 
     private Sensor mRotationSensor;
@@ -99,6 +113,10 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
     private String fruit_classifier = "";
 
     private AVLoadingIndicatorView avi;
+
+    int mWidth;
+    int mHeight;
+    private Point centre;
 
 
 
@@ -157,6 +175,12 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
                     rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
 
+                    iv = findViewById(R.id.fruitDetectedView);
+
+                    nxt = findViewById(R.id.nextFruit);
+
+
+                    mOpenCvCameraView.enableView();
 
                 } break;
                 default:
@@ -173,7 +197,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         Log.i(TAG, "Instantiated new " + this.getClass());
 
         mDetectorName = new String[2];
+
         mDetectorName[JAVA_DETECTOR] = "Java";
+
 
     }
 
@@ -181,7 +207,9 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         Log.i(TAG, "called onCreate");
+
         super.onCreate(savedInstanceState);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -194,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         setContentView(R.layout.show_camera);
 
-        mOpenCvCameraView = (JavaCameraView) findViewById(R.id.show_camera_activity_java_surface_view);
+        mOpenCvCameraView = findViewById(R.id.show_camera_activity_java_surface_view);
 
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
 
@@ -202,38 +230,33 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         mOpenCvCameraView.setCameraIndex(0);
 
-        mOpenCvCameraView.enableView();
 
+        String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
         // First check android version
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
             //Check if permission is already granted
             //thisActivity is your activity. (e.g.: MainActivity.this)
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                // Give first an explanation, if needed.
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.CAMERA)) {
-
-                    // Show an explanation to the user *asynchronously* -- don't block
-                    // this thread waiting for the user's response! After the user
-                    // sees the explanation, try again to request the permission.
-
-                } else {
+            if (!hasPermissions(this, PERMISSIONS)) {
 
                     // No explanation needed, we can request the permission.
 
                     ActivityCompat.requestPermissions(this,
-                            new String[]{ Manifest.permission.CAMERA},
+                            PERMISSIONS,
                             1);
-
-
 
                 }
             }
 
+
+        if (!isExternalStorageWritable()) {
+
+            Log.d(TAG, "Storage not available.");
+
+            Toast.makeText(this, "Hardware storage not accessible.", Toast.LENGTH_LONG).show();
+
         }
+
+
 
         // Get an instance of the SensorManager
         try {
@@ -251,6 +274,17 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         avi = findViewById(R.id.avi);
 
         avi.show();
+
+        mWidth = (this.getResources().getDisplayMetrics().widthPixels) / 2;
+
+        mHeight = (this.getResources().getDisplayMetrics().heightPixels) / 2;
+
+        centre = new Point(mWidth, mHeight);
+
+
+        File f3 = new File(Environment.getExternalStorageDirectory() + "/FruitDetector/");
+        if (!f3.exists())
+            f3.mkdirs();
 
     }
 
@@ -312,6 +346,7 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 
+        final Mat tmp = inputFrame.rgba().clone();
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
 
@@ -324,22 +359,103 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
         }
 
-        MatOfRect bananas = new MatOfRect();
+        MatOfRect fruit = new MatOfRect();
 
         if (mDetectorType == JAVA_DETECTOR) {
             if (mJavaDetector != null)
-                mJavaDetector.detectMultiScale(mGray, bananas, 1.05, 2, 2,
+
+                mJavaDetector.detectMultiScale(mGray, fruit, 1.05, 2, 2,
                         new Size(mAbsoluteFruitSize, mAbsoluteFruitSize), new Size());
         } else {
             Log.e(TAG, "Detection method is not selected!");
         }
 
-        Rect[] bananaArray = bananas.toArray();
+        Rect[] fruitArray = fruit.toArray();
 
-        for (int i = 0; i < bananaArray.length; i++)
-            Imgproc.rectangle(mRgba, bananaArray[i].tl(), bananaArray[i].br(), RED, 3);
+        for (int i = 0; i < fruitArray.length; i++) {
+
+            Imgproc.rectangle(mRgba, fruitArray[i].tl(), fruitArray[i].br(), RED, 3);
+
+            Point quantizedTL = new Point(((int) (fruitArray[i].tl().x / 100)) * 100, ((int) fruitArray[i].tl().y / 100));
+
+            Point quantizedBR = new Point(((int) (fruitArray[i].br().x / 100)) * 100, ((int) fruitArray[i].br().y / 100));
+
+            int bucktID = quantizedTL.hashCode() + quantizedBR.hashCode() * 2;
+
+            if (rectBuckts.containsKey(bucktID)) {
+                rectBuckts.put(bucktID, rectBuckts.get(bucktID) + 1);
+                rectCue.put(bucktID, new Rect(quantizedTL, quantizedBR));
+            } else {
+                rectBuckts.put(bucktID, 1);
+            }
+
+
+        }
+
+        int maxDetections = 0;
+        int maxDetectionsKey = 0;
+        for (Map.Entry<Integer, Integer> e : rectBuckts.entrySet()) {
+            if (e.getValue() > maxDetections) {
+                maxDetections = e.getValue();
+                maxDetectionsKey = e.getKey();
+            }
+        }
+        if (maxDetections > 5 && !mOpenCvCameraView.isObjDetected()) {
+            // Imgproc.rectangle(mRgba, rectCue.get(maxDetectionsKey).tl(), rectCue.get(maxDetectionsKey).br(), GREEN, 3);
+
+            // String fileName = Environment.getExternalStorageDirectory().getPath() + "/FruitDetector/detected_fruit.jpg";
+
+            mOpenCvCameraView.setObjDetected(true);
+
+            //mOpenCvCameraView.takePicture(fileName);
+
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(Void... arg0) {
+                    processImage(tmp);
+                    return null;
+                }
+            }.execute();
+
+
+            rectBuckts.clear();
+
+        }
+        //Imgproc.rectangle(mRgba, fruitArray[i].tl(), fruitArray[i].br(), RED, 3);
 
         return mRgba;
+
+
+    }
+
+    public void processImage(Mat frame) {
+        // make a mat and draw something
+        Mat m = frame;
+
+        Imgproc.putText(m, "...nice choice!", new Point(30, 80), Core.FONT_HERSHEY_SCRIPT_SIMPLEX, 2.2, new Scalar(200, 200, 0), 2);
+
+        // convert to bitmap:
+        final Bitmap bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+
+        Utils.matToBitmap(m, bm);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                //update ui
+                iv.setImageBitmap(bm);
+
+                iv.setVisibility(View.VISIBLE);
+
+                mOpenCvCameraView.disableView();
+
+                nxt.setVisibility(View.VISIBLE);
+
+                landscape_label.setVisibility(View.GONE);
+
+
+            }
+        });
 
     }
 
@@ -368,7 +484,11 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
         if ((roll >= 70 && roll <= 135)) {
 
             portrait_label.setVisibility(View.GONE);
-            landscape_label.setVisibility(View.VISIBLE);
+            if (!mOpenCvCameraView.isObjDetected()) {
+
+                landscape_label.setVisibility(View.VISIBLE);
+            }
+
             avi.setVisibility(View.VISIBLE);
             rev_landscape_label.setVisibility(View.GONE);
 
@@ -412,5 +532,28 @@ public class MainActivity extends AppCompatActivity implements CvCameraViewListe
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
+
+    @Override
+    public void onPictureTaken(byte[] data, Camera camera) {
+
+    }
+
+
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
+    }
+
+
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1 && context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
