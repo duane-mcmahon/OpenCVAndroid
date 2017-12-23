@@ -1,5 +1,6 @@
 package org.opencv.android;
 
+import java.io.FileOutputStream;
 import java.util.List;
 
 import android.content.Context;
@@ -31,7 +32,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
 
     private static final int MAGIC_TEXTURE_ID = 10;
     private static final String TAG = "JavaCameraView";
-
+    
     private byte mBuffer[];
     private Mat[] mFrameChain;
     private int mChainIdx = 0;
@@ -42,6 +43,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
     protected JavaCameraFrame[] mCameraFrame;
     private SurfaceTexture mSurfaceTexture;
     private int mPreviewFormat = ImageFormat.NV21;
+
 
     public static class JavaCameraSizeAccessor implements ListItemAccessor {
 
@@ -344,7 +346,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
         private Mat mRgba;
         private int mWidth;
         private int mHeight;
-    };
+    }
 
     private class CameraWorker implements Runnable {
 
