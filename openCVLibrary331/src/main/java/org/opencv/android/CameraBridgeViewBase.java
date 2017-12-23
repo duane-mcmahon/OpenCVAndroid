@@ -1,5 +1,6 @@
 package org.opencv.android;
 
+import java.io.FileOutputStream;
 import java.util.List;
 
 import org.opencv.BuildConfig;
@@ -7,6 +8,7 @@ import org.opencv.R;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
+import android.hardware.Camera.PictureCallback;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -31,6 +33,17 @@ import android.view.SurfaceView;
 public abstract class CameraBridgeViewBase extends SurfaceView implements SurfaceHolder.Callback {
 
     private static final String TAG = "CameraBridge";
+
+    public boolean isObjDetected() {
+        return objDetected;
+    }
+
+    public void setObjDetected(boolean objDetected) {
+        this.objDetected = objDetected;
+    }
+
+    private boolean objDetected;
+
     private static final int MAX_UNSPECIFIED = -1;
     private static final int STOPPED = 0;
     private static final int STARTED = 1;
@@ -63,6 +76,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         getHolder().addCallback(this);
         mMaxWidth = MAX_UNSPECIFIED;
         mMaxHeight = MAX_UNSPECIFIED;
+        setObjDetected(false);
     }
 
     public CameraBridgeViewBase(Context context, AttributeSet attrs) {
@@ -432,6 +446,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             }
         }
     }
+
 
     /**
      * This method is invoked shall perform concrete operation to initialize the camera.
