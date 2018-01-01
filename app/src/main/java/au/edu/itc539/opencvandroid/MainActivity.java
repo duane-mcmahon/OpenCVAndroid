@@ -1,4 +1,5 @@
 package au.edu.itc539.opencvandroid;
+// android
 
 import android.Manifest;
 import android.app.Activity;
@@ -49,565 +50,571 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
-//animation
+// animation
+// java
 // OpenCV Classes
 
 
-public class MainActivity extends AppCompatActivity implements CvCameraViewListener2,
-    SensorEventListener {
+/**
+ * <b> Detects an orange or a banana in real time </b> using <br />
+ * the camera of an android phone or tablet. Developed on a <br />
+ * motorola moto z play. <br />
+ *
+ * @author Duane McMahon
+ * @version 1.0
+ * @since 07-01-2018
+ */
+public class MainActivity extends AppCompatActivity
+    implements CvCameraViewListener2, SensorEventListener {
 
-    private Scalar RED = new Scalar(255, 0, 0);
+  private Scalar RED = new Scalar(255, 0, 0);
 
-    private Hashtable<Integer, Integer> rectBuckts = new Hashtable<>();
+  private Hashtable<Integer, Integer> rectBuckts = new Hashtable<>();
 
-    private Hashtable<Integer, Rect> rectCue = new Hashtable<>();
+  private Hashtable<Integer, Rect> rectCue = new Hashtable<>();
 
-    public static final int JAVA_DETECTOR = 0;
-    // Used for logging success or failure messages
-    private static final String TAG = "MainActivity";
+  private final int JAVA_DETECTOR = 0;
+  // Used for logging success or failure messages
+  private static final String TAG = "MainActivity";
+  // Loads camera view of OpenCV for us to use. This lets us see using OpenCV
+  private JavaCameraView mOpenCvCameraView;
 
-    // Loads camera view of OpenCV for us to use. This lets us see using OpenCV
-    private JavaCameraView mOpenCvCameraView;
+  private File mCascadeFile;
 
-    private File mCascadeFile;
+  private int mDetectorType = JAVA_DETECTOR;
 
-    private int mDetectorType = JAVA_DETECTOR;
+  private String[] mDetectorName;
 
-    private String[] mDetectorName;
+  private CascadeClassifier mJavaDetector;
 
-    private CascadeClassifier mJavaDetector;
+  private Mat mRgba, mGray;
 
-    private Mat mRgba, mGray;
+  private float mRelativeFruitSize = 0.2f;
 
-    private float mRelativeFruitSize = 0.2f;
+  private int mAbsoluteFruitSize;
 
-    private int mAbsoluteFruitSize;
+  private ImageView portrait_label, rev_landscape_label, iv, nextButton;
 
-    private ImageView portrait_label, rev_landscape_label, iv, nextButton;
+  private TextView landscape_label;
 
-    private TextView landscape_label;
+  private ImageButton nxt;
 
-    private ImageButton nxt;
+  private SensorManager mSensorManager;
 
-    private SensorManager mSensorManager;
+  private Sensor mRotationSensor;
 
-    private Sensor mRotationSensor;
+  private final int SENSOR_DELAY = 500 * 1000; // 500ms
 
-    private static final int SENSOR_DELAY = 500 * 1000; // 500ms
+  private final int FROM_RADS_TO_DEGS = -57;
 
-    private static final int FROM_RADS_TO_DEGS = -57;
+  private String fruit_classifier;
 
-    private String fruit_classifier;
+  private AVLoadingIndicatorView avi;
 
-    private AVLoadingIndicatorView avi;
+  private int mWidth, mHeight;
 
-    private int mWidth, mHeight;
+  private Point centre;
 
-    private Point centre;
-
-    private Detectable undetected;
-
-
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+  private Detectable undetected;
+  // initialize and load the opencv libraries and modules
+  private BaseLoaderCallback mLoaderCallback =
+      new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
+          switch (status) {
+            case LoaderCallbackInterface.SUCCESS: {
+              Log.i(TAG, "OpenCV loaded successfully");
 
-                    Log.i(TAG, "OpenCV loaded successfully");
+              Intent iin = getIntent();
 
-                    Intent iin = getIntent();
+              Bundle b = iin.getExtras();
 
-                    Bundle b = iin.getExtras();
+              if (b != null) {
+                fruit_classifier = (String) b.get("fruit");
+              }
 
-                    if (b != null) {
-                        fruit_classifier = (String) b.get("fruit");
-                    }
+              Log.i(TAG, "OpenCV loaded successfully. Fruit: " + fruit_classifier);
 
-                    Log.i(TAG, "OpenCV loaded successfully. Fruit: " + fruit_classifier);
+              try {
+                // load cascade file from application resources
+                InputStream is =
+                    getResources()
+                        .openRawResource(
+                            getResources()
+                                .getIdentifier(fruit_classifier, "raw", getPackageName()));
 
-                    try {
-                        // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(
+                File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
 
-                                getResources().getIdentifier(fruit_classifier, "raw", getPackageName()));
+                mCascadeFile = new File(cascadeDir, fruit_classifier + ".xml");
 
-                        File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+                FileOutputStream os = new FileOutputStream(mCascadeFile);
 
-                        mCascadeFile = new File(cascadeDir, fruit_classifier + ".xml");
+                byte[] buffer = new byte[4096];
 
-                        FileOutputStream os = new FileOutputStream(mCascadeFile);
+                int bytesRead;
 
-                        byte[] buffer = new byte[4096];
+                while ((bytesRead = is.read(buffer)) != -1) {
 
-                        int bytesRead;
-
-                        while ((bytesRead = is.read(buffer)) != -1) {
-
-                            os.write(buffer, 0, bytesRead);
-                        }
-
-                        is.close();
-
-                        os.close();
-
-                        mJavaDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
-
-                        if (mJavaDetector.empty()) {
-
-                            Log.e(TAG, "Failed to load cascade classifier");
-
-                            mJavaDetector = null;
-
-                        } else
-
-                            Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
-
-                        cascadeDir.delete();
-
-                    } catch (IOException e) {
-
-                        e.printStackTrace();
-
-                        Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
-                    }
-
-                    portrait_label = findViewById(R.id.fruit_target_portrait);
-
-                    landscape_label = findViewById(R.id.fruit_target_landscape);
-
-                    landscape_label.setText(fruit_classifier);
-
-                    rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
-
-                    iv = findViewById(R.id.fruitDetectedView);
-
-                    nxt = findViewById(R.id.nextFruit);
-
-                    mOpenCvCameraView.enableView();
-
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
-            }
-        }
-    };
-
-
-    public MainActivity() {
-
-        Log.i(TAG, "Instantiated new " + this.getClass());
-
-        mDetectorName = new String[2];
-
-        mDetectorName[JAVA_DETECTOR] = "Java";
-
-    }
-
-
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-
-        Log.i(TAG, "called onCreate");
-
-        super.onCreate(savedInstanceState);
-
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        //Remove title bar
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-
-        //Remove notification bar
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-        setContentView(R.layout.show_camera);
-
-        mOpenCvCameraView = findViewById(R.id.show_camera_activity_java_surface_view);
-
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-
-        mOpenCvCameraView.setCvCameraViewListener(this);
-
-        mOpenCvCameraView.setCameraIndex(0);
-
-        String[] PERMISSIONS = {Manifest.permission.CAMERA};
-        // First check android version
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
-            //Check if permission is already granted
-            //this Activity (e.g.: MainActivity.this)
-            if (!hasPermissions(this, PERMISSIONS)) {
-
-                    // No explanation needed, we can request the permission.
-
-                    ActivityCompat.requestPermissions(this,
-                            PERMISSIONS,
-                            1);
-
-                }
-            }
-
-        // Get an instance of the SensorManager
-        try {
-
-            mSensorManager = (SensorManager) getSystemService(Activity.SENSOR_SERVICE);
-
-            if (mSensorManager != null) {
-                mRotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-            }
-
-            mSensorManager.registerListener(this, mRotationSensor, SENSOR_DELAY);
-
-        } catch (Exception e) {
-
-            Toast.makeText(this, "Hardware compatibility issue", Toast.LENGTH_LONG).show();
-
-        }
-
-        avi = findViewById(R.id.avi);
-
-        avi.show();
-
-        mWidth = (this.getResources().getDisplayMetrics().widthPixels) / 2;
-
-        mHeight = (this.getResources().getDisplayMetrics().heightPixels) / 2;
-
-        centre = new Point(mWidth, mHeight);
-
-        nextButton = findViewById(R.id.nextFruit);
-
-        nextButton.setOnClickListener(clickListener);
-
-        // Calling Application class (see application tag in AndroidManifest.xml)
-        undetected = (Detectable) getApplicationContext();
-
-    }
-
-    @Override
-    public void onPause()
-    {
-        super.onPause();
-
-        if (mOpenCvCameraView != null)
-
-            mOpenCvCameraView.disableView();
-
-        mSensorManager.unregisterListener(this);
-    }
-
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-
-        if (!OpenCVLoader.initDebug()) {
-
-            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallback);
-
-        } else {
-
-            Log.d(TAG, "OpenCV library found inside package. Using it!");
-
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-
-        }
-
-
-        if (mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() != 0) {
-
-            Sensor s = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
-
-            mSensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
-
-        }
-
-    }
-
-    @Override
-    public void onDestroy() {
-
-        super.onDestroy();
-
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-    }
-
-    public void onCameraViewStarted(int width, int height) {
-
-        mGray = new Mat();
-
-        mRgba = new Mat(height, width, CvType.CV_8UC4);
-
-    }
-
-    public void onCameraViewStopped() {
-
-        mGray.release();
-
-        mRgba.release();
-
-    }
-
-
-    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-
-        final Mat tmp = inputFrame.rgba().clone();
-        mRgba = inputFrame.rgba();
-        mGray = inputFrame.gray();
-
-
-        if (mAbsoluteFruitSize == 0) {
-            int height = mGray.rows();
-            if (Math.round(height * mRelativeFruitSize) > 0) {
-                mAbsoluteFruitSize = Math.round(height * mRelativeFruitSize);
-            }
-
-        }
-
-        MatOfRect fruit = new MatOfRect();
-
-        if (mDetectorType == JAVA_DETECTOR) {
-            if (mJavaDetector != null)
-
-                mJavaDetector.detectMultiScale(mGray, fruit, 1.05, 2, 2,
-                        new Size(mAbsoluteFruitSize, mAbsoluteFruitSize), new Size());
-        } else {
-            Log.e(TAG, "Detection method is not selected!");
-        }
-
-        Rect[] fruitArray = fruit.toArray();
-
-        for (Rect aFruitArray : fruitArray) {
-
-            Imgproc.rectangle(mRgba, aFruitArray.tl(), aFruitArray.br(), RED, 3);
-
-            Point quantizedTL = new Point(((int) (aFruitArray.tl().x / 100)) * 100,
-                ((int) aFruitArray.tl().y / 100));
-
-            Point quantizedBR = new Point(((int) (aFruitArray.br().x / 100)) * 100,
-                ((int) aFruitArray.br().y / 100));
-
-            int bucktID = quantizedTL.hashCode() + quantizedBR.hashCode() * 2;
-
-            if (rectBuckts.containsKey(bucktID)) {
-
-                rectBuckts.put(bucktID, rectBuckts.get(bucktID) + 1);
-
-                rectCue.put(bucktID, new Rect(quantizedTL, quantizedBR));
-
-            } else {
-
-                rectBuckts.put(bucktID, 1);
-
-            }
-
-        }
-
-        int maxDetections = 0;
-
-        int maxDetectionsKey = 0;
-
-        for (Map.Entry<Integer, Integer> e : rectBuckts.entrySet()) {
-            if (e.getValue() > maxDetections) {
-                maxDetections = e.getValue();
-                maxDetectionsKey = e.getKey();
-            }
-        }
-        if (maxDetections > 5 && !mOpenCvCameraView.isObjDetected()) {
-
-
-            mOpenCvCameraView.setObjDetected(true);
-
-            new AsyncTask<Mat, Void, Bitmap>() {
-                @Override
-                protected Bitmap doInBackground(Mat... mats) {
-
-                    Mat m = mats[0];
-
-                    Imgproc
-                        .putText(m, "...nice choice!", new Point(30, 80), Core.FONT_HERSHEY_PLAIN,
-                            2.2,
-                            new Scalar(200, 200, 0), 2);
-
-                    // convert to bitmap:
-                    final Bitmap bm = Bitmap
-                        .createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
-
-                    Utils.matToBitmap(m, bm);
-
-                    return bm;
+                  os.write(buffer, 0, bytesRead);
                 }
 
-                @Override
-                protected void onPostExecute(Bitmap aVoid) {
+                is.close();
 
-                    //update ui
-                    iv.setImageBitmap(aVoid);
+                os.close();
 
-                    iv.setVisibility(View.VISIBLE);
+                mJavaDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
 
-                    mOpenCvCameraView.disableView();
+                if (mJavaDetector.empty()) {
 
-                    nxt.setVisibility(View.VISIBLE);
+                  Log.e(TAG, "Failed to load cascade classifier");
 
-                    landscape_label.setVisibility(View.GONE);
+                  mJavaDetector = null;
 
+                } else {
+                  Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
                 }
 
-            }.execute(tmp);
+                cascadeDir.delete();
 
-            rectBuckts.clear();
+              } catch (IOException e) {
 
-        }
+                e.printStackTrace();
 
-        return mRgba;
+                Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
+              }
 
+              portrait_label = findViewById(R.id.fruit_target_portrait);
 
-    }
+              landscape_label = findViewById(R.id.fruit_target_landscape);
 
+              landscape_label.setText(fruit_classifier);
 
-    private void update(float[] vectors) {
+              rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
 
-        float[] rotationMatrix = new float[9];
+              iv = findViewById(R.id.fruitDetectedView);
 
-        SensorManager.getRotationMatrixFromVector(rotationMatrix, vectors);
+              nxt = findViewById(R.id.nextFruit);
 
-        int worldAxisX = SensorManager.AXIS_X;
-
-        int worldAxisZ = SensorManager.AXIS_Z;
-
-        float[] adjustedRotationMatrix = new float[9];
-
-        SensorManager.remapCoordinateSystem(rotationMatrix, worldAxisX, worldAxisZ, adjustedRotationMatrix);
-
-        float[] orientation = new float[3];
-
-        SensorManager.getOrientation(adjustedRotationMatrix, orientation);
-
-        //    float pitch = orientation[1] * FROM_RADS_TO_DEGS;
-
-        float roll = orientation[2] * FROM_RADS_TO_DEGS;    // relevant
-
-        if ((roll >= 70 && roll <= 135)) {
-
-            portrait_label.setVisibility(View.GONE);
-
-            if (!mOpenCvCameraView.isObjDetected()) {
-
-                landscape_label.setVisibility(View.VISIBLE);
+              mOpenCvCameraView.enableView();
             }
-
-            avi.setVisibility(View.VISIBLE);
-
-            rev_landscape_label.setVisibility(View.GONE);
-
-        }
-
-        if (roll >= -180 && roll <= -70) {
-
-            portrait_label.setVisibility(View.GONE);
-
-            landscape_label.setVisibility(View.GONE);
-
-            avi.setVisibility(View.GONE);
-
-            rev_landscape_label.setVisibility(View.VISIBLE);
-
-        }
-
-        if (roll <= -320 || (roll >= 0 && roll <= 45)) {
-
-            portrait_label.setVisibility(View.VISIBLE);
-
-            landscape_label.setVisibility(View.GONE);
-
-            avi.setVisibility(View.GONE);
-
-            rev_landscape_label.setVisibility(View.GONE);
-
-        }
-
-
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-
-        if (event.sensor == mRotationSensor) {
-            if (event.values.length > 4) {
-                float[] truncatedRotationVector = new float[4];
-                System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
-                update(truncatedRotationVector);
-            } else {
-                update(event.values);
+            break;
+            default: {
+              super.onManagerConnected(status);
             }
+            break;
+          }
+        }
+      };
+
+  public MainActivity() {
+
+    Log.i(TAG, "Instantiated new " + this.getClass());
+
+    mDetectorName = new String[2];
+
+    mDetectorName[JAVA_DETECTOR] = "Java";
+  }
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+
+    Log.i(TAG, "...called onCreate.");
+
+    super.onCreate(savedInstanceState);
+
+    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    // Remove title bar
+    requestWindowFeature(Window.FEATURE_NO_TITLE);
+    // Remove notification bar
+    getWindow()
+        .setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+    setContentView(R.layout.show_camera);
+
+    mOpenCvCameraView = findViewById(R.id.show_camera_activity_java_surface_view);
+
+    mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+
+    mOpenCvCameraView.setCvCameraViewListener(this);
+
+    mOpenCvCameraView.setCameraIndex(0);
+
+    String[] PERMISSIONS = {Manifest.permission.CAMERA};
+    // First check android version
+    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+      // Check if permission is already granted
+      if (!hasPermissions(this, PERMISSIONS)) {
+        // Request the permission.
+        ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
+      }
+    }
+    // Get an instance of the SensorManager
+    try {
+
+      mSensorManager = (SensorManager) getSystemService(Activity.SENSOR_SERVICE);
+
+      if (mSensorManager != null) {
+        mRotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+      }
+
+      mSensorManager.registerListener(this, mRotationSensor, SENSOR_DELAY);
+
+    } catch (Exception e) {
+
+      Toast.makeText(this, "Hardware compatibility issue", Toast.LENGTH_LONG).show();
+    }
+
+    avi = findViewById(R.id.avi);
+
+    avi.show();
+
+    mWidth = (this.getResources().getDisplayMetrics().widthPixels) / 2;
+
+    mHeight = (this.getResources().getDisplayMetrics().heightPixels) / 2;
+
+    centre = new Point(mWidth, mHeight);
+
+    nextButton = findViewById(R.id.nextFruit);
+
+    nextButton.setOnClickListener(clickListener);
+    // Calling Application class (see application tag in AndroidManifest.xml)
+    undetected = (Detectable) getApplicationContext();
+  }
+
+  @Override
+  public void onPause() {
+
+    Log.i(TAG, "...called onPause.");
+
+    super.onPause();
+
+    if (mOpenCvCameraView != null) {
+      mOpenCvCameraView.disableView();
+    }
+
+    mSensorManager.unregisterListener(this);
+  }
+
+  @Override
+  public void onResume() {
+
+    Log.i(TAG, "...called onResume.");
+
+    super.onResume();
+
+    if (!OpenCVLoader.initDebug()) {
+
+      Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+
+      OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallback);
+
+    } else {
+
+      Log.d(TAG, "OpenCV library found inside package. Using it!");
+
+      mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+    }
+
+    if (mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() != 0) {
+
+      Sensor s = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
+
+      mSensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+  }
+
+  @Override
+  public void onDestroy() {
+
+    Log.i(TAG, "...called onDestroy.");
+
+    super.onDestroy();
+
+    if (mOpenCvCameraView != null) {
+      mOpenCvCameraView.disableView();
+    }
+  }
+
+  /**
+   * This method is invoked when camera preview has started. After this method is invoked the
+   * frames will start to be delivered to client via the onCameraFrame() callback.
+   * @param width -  the width of the frames that will be delivered
+   * @param height - the height of the frames that will be delivered
+   */
+  @Override
+  public void onCameraViewStarted(int width, int height) {
+
+    mGray = new Mat();
+
+    mRgba = new Mat(height, width, CvType.CV_8UC4);
+  }
+
+  /**
+   * This method is invoked when camera preview has been stopped for some reason. No frames will
+   * be delivered via onCameraFrame() callback after this method is called.
+   */
+  @Override
+  public void onCameraViewStopped() {
+
+    mGray.release();
+
+    mRgba.release();
+  }
+
+  /**
+   * This method is invoked when delivery of the frame needs to be done. The returned values -
+   * is a modified frame which needs to be displayed on the screen.
+   * @param inputFrame
+   * @return a mat object
+   */
+  @Override
+  public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+
+    final Mat tmp = inputFrame.rgba().clone();
+    mRgba = inputFrame.rgba();
+    mGray = inputFrame.gray();
+
+    if (mAbsoluteFruitSize == 0) {
+      int height = mGray.rows();
+      if (Math.round(height * mRelativeFruitSize) > 0) {
+        mAbsoluteFruitSize = Math.round(height * mRelativeFruitSize);
+      }
+    }
+
+    MatOfRect fruit = new MatOfRect();
+
+    if (mDetectorType == JAVA_DETECTOR) {
+      if (mJavaDetector != null) {
+        mJavaDetector.detectMultiScale(
+            mGray, fruit, 1.05, 2, 2, new Size(mAbsoluteFruitSize, mAbsoluteFruitSize), new Size());
+      }
+    } else {
+      Log.e(TAG, "Detection method is not selected!");
+    }
+
+    Rect[] fruitArray = fruit.toArray();
+
+    for (Rect aFruitArray : fruitArray) {
+
+      Imgproc.rectangle(mRgba, aFruitArray.tl(), aFruitArray.br(), RED, 3);
+
+      Point quantizedTL =
+          new Point(((int) (aFruitArray.tl().x / 100)) * 100, ((int) aFruitArray.tl().y / 100));
+
+      Point quantizedBR =
+          new Point(((int) (aFruitArray.br().x / 100)) * 100, ((int) aFruitArray.br().y / 100));
+
+      int bucktID = quantizedTL.hashCode() + quantizedBR.hashCode() * 2;
+
+      if (rectBuckts.containsKey(bucktID)) {
+
+        rectBuckts.put(bucktID, rectBuckts.get(bucktID) + 1);
+
+        rectCue.put(bucktID, new Rect(quantizedTL, quantizedBR));
+
+      } else {
+
+        rectBuckts.put(bucktID, 1);
+      }
+    }
+
+    int maxDetections = 0;
+
+    int maxDetectionsKey = 0;
+
+    for (Map.Entry<Integer, Integer> e : rectBuckts.entrySet()) {
+      if (e.getValue() > maxDetections) {
+        maxDetections = e.getValue();
+        maxDetectionsKey = e.getKey();
+      }
+    }
+    if (maxDetections > 5 && !mOpenCvCameraView.isObjDetected()) {
+
+      mOpenCvCameraView.setObjDetected(true);
+
+      new AsyncTask<Mat, Void, Bitmap>() {
+        @Override
+        protected Bitmap doInBackground(Mat... mats) {
+
+          Mat m = mats[0];
+
+          Imgproc.putText(
+              m,
+              "...nice choice!",
+              new Point(30, 80),
+              Core.FONT_HERSHEY_PLAIN,
+              2.2,
+              new Scalar(200, 200, 0),
+              2);
+
+          // convert to bitmap:
+          final Bitmap bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+
+          Utils.matToBitmap(m, bm);
+
+          return bm;
         }
 
-    }
+        @Override
+        protected void onPostExecute(Bitmap aVoid) {
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    }
+          // update ui
+          iv.setImageBitmap(aVoid);
 
+          iv.setVisibility(View.VISIBLE);
 
+          mOpenCvCameraView.disableView();
 
-    public static boolean hasPermissions(Context context, String... permissions) {
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1 && context != null && permissions != null) {
-            for (String permission : permissions) {
-                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-            }
+          nxt.setVisibility(View.VISIBLE);
+
+          landscape_label.setVisibility(View.GONE);
         }
-        return true;
+      }.execute(tmp);
+
+      rectBuckts.clear();
     }
 
-    View.OnClickListener clickListener = new View.OnClickListener() {
+    return mRgba;
+  }
+
+  /**
+   * Updates the ui with information ("rotate 90 degrees") depending on detected rotation.
+   * @param vectors e.g. SensorEvent event values
+   */
+  private void update(float[] vectors) {
+
+    float[] rotationMatrix = new float[9];
+
+    SensorManager.getRotationMatrixFromVector(rotationMatrix, vectors);
+
+    int worldAxisX = SensorManager.AXIS_X;
+
+    int worldAxisZ = SensorManager.AXIS_Z;
+
+    float[] adjustedRotationMatrix = new float[9];
+
+    SensorManager.remapCoordinateSystem(
+        rotationMatrix, worldAxisX, worldAxisZ, adjustedRotationMatrix);
+
+    float[] orientation = new float[3];
+
+    SensorManager.getOrientation(adjustedRotationMatrix, orientation);
+
+    //    float pitch = orientation[1] * FROM_RADS_TO_DEGS;
+
+    float roll = orientation[2] * FROM_RADS_TO_DEGS; // relevant
+
+    if ((roll >= 70 && roll <= 135)) {
+
+      portrait_label.setVisibility(View.GONE);
+
+      if (!mOpenCvCameraView.isObjDetected()) {
+
+        landscape_label.setVisibility(View.VISIBLE);
+      }
+
+      avi.setVisibility(View.VISIBLE);
+
+      rev_landscape_label.setVisibility(View.GONE);
+    }
+
+    if (roll >= -180 && roll <= -70) {
+
+      portrait_label.setVisibility(View.GONE);
+
+      landscape_label.setVisibility(View.GONE);
+
+      avi.setVisibility(View.GONE);
+
+      rev_landscape_label.setVisibility(View.VISIBLE);
+    }
+
+    if (roll <= -320 || (roll >= 0 && roll <= 45)) {
+
+      portrait_label.setVisibility(View.VISIBLE);
+
+      landscape_label.setVisibility(View.GONE);
+
+      avi.setVisibility(View.GONE);
+
+      rev_landscape_label.setVisibility(View.GONE);
+    }
+  }
+
+  @Override
+  public void onSensorChanged(SensorEvent event) {
+
+    if (event.sensor == mRotationSensor) {
+      if (event.values.length > 4) {
+        float[] truncatedRotationVector = new float[4];
+        System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
+        update(truncatedRotationVector);
+      } else {
+        update(event.values);
+      }
+    }
+  }
+
+  @Override
+  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+  }
+
+  /**
+   * Helper method for acquiring permissions to use hardware features
+   * @param context i.e this Activity (e.g.: MainActivity.this)
+   * @param permissions e.g. CAMERA, WRITE_EXTERNAL_STORAGE
+   * @return
+   */
+  public static boolean hasPermissions(Context context, String... permissions) {
+    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1
+        && context != null
+        && permissions != null) {
+      for (String permission : permissions) {
+        if (ActivityCompat.checkSelfPermission(context, permission)
+            != PackageManager.PERMISSION_GRANTED) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  View.OnClickListener clickListener =
+      new View.OnClickListener() {
         @Override
         public void onClick(View v) {
 
-            int index;
+          int index;
 
-            Log.i("TAG", "Next object to identify");
-            // use the coordinates for whatever
+          Log.i("TAG", "Next object to identify");
 
-            mOpenCvCameraView.setObjDetected(false);
+          mOpenCvCameraView.setObjDetected(false);
 
-            if (undetected.detectables.size() > 1) {
+          if (undetected.detectables.size() > 1) {
 
-                undetected.detectables.remove(fruit_classifier);
+            undetected.detectables.remove(fruit_classifier);
 
-                index = undetected.detectables.size() - 1;
+            index = undetected.detectables.size() - 1;
 
-                Intent ii = new Intent();
+            Intent ii = new Intent();
 
-                ii.putExtra("fruit", undetected.detectables.get(index));
+            ii.putExtra("fruit", undetected.detectables.get(index));
 
-                ii.setClass(MainActivity.this, MainActivity.class);
+            ii.setClass(MainActivity.this, MainActivity.class);
 
-                startActivity(ii);
+            startActivity(ii);
 
-                finish();
+            finish();
 
-            } else {
+          } else {
+            // launch final activity
+            Intent ii = new Intent(MainActivity.this, SaladActivity.class);
 
-                // launch 'salad' activity
-                Intent ii = new Intent(MainActivity.this, SaladActivity.class);
+            startActivity(ii);
 
-                startActivity(ii);
-
-                finish();
-
-            }
-
+            finish();
+          }
         }
-
-
-    };  // end-of-clickListener
-
+      }; // end-of-clickListener
 }

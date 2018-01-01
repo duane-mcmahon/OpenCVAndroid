@@ -1,6 +1,5 @@
 package au.edu.itc539.opencvandroid;
 
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,169 +13,159 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
-
+/**
+ * A menu - the user selects a fruit from the bowl. <br />
+ *
+ * @author Duane McMahon
+ * @version 1.0
+ * @since 07-01-2018
+ */
 public class OpeningActivity extends Activity {
 
-    private static final String DEBUG_TAG = "OpeningActivity";
+  private static final String DEBUG_TAG = "OpeningActivity";
 
+  private Intent ii;
+  private ImageSwitcher imageSwitcher;
+  private ImageView opening_view;
+  private TextView state;
+  final Handler handler = new Handler();
 
-    private Intent ii;
-    private ImageSwitcher imageSwitcher;
-    private ImageView opening_view;
-    private TextView state;
-    final Handler handler = new Handler();
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
 
+    Log.i(DEBUG_TAG, "Called onCreate of OpeningActivity...");
 
+    super.onCreate(savedInstanceState);
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    setContentView(R.layout.show_opening);
 
+    state = findViewById(R.id.select);
 
-        Log.i(DEBUG_TAG, "Called onCreate of OpeningActivity...");
+    imageSwitcher = findViewById(R.id.opening_image);
 
-        super.onCreate(savedInstanceState);
+    imageSwitcher.setFactory(
+        new ViewSwitcher.ViewFactory() {
+          @Override
+          public View makeView() {
 
-        setContentView(R.layout.show_opening);
+            opening_view = new ImageView(getApplicationContext());
 
-        state = findViewById(R.id.select);
-
-        imageSwitcher = findViewById(R.id.opening_image);
-
-        imageSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
-            @Override
-            public View makeView() {
-
-                opening_view = new ImageView(getApplicationContext());
-
-                return opening_view;
-
-            }
+            return opening_view;
+          }
         });
 
+    imageSwitcher.setImageResource(R.drawable.theme_image);
 
-        imageSwitcher.setImageResource(R.drawable.theme_image);
+    Animation in = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
 
-        Animation in = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+    imageSwitcher.setInAnimation(in);
 
-        imageSwitcher.setInAnimation(in);
+    ImageView bananaButton = findViewById(R.id.banana_button);
 
-        ImageView bananaButton = findViewById(R.id.banana_button);
+    ImageView orangeButton = findViewById(R.id.orange_button);
 
-        ImageView orangeButton = findViewById(R.id.orange_button);
+    bananaButton.setOnClickListener(bananaClickListener);
 
-        bananaButton.setOnClickListener(bananaClickListener);
+    orangeButton.setOnClickListener(orangeClickListener);
+  }
 
-        orangeButton.setOnClickListener(orangeClickListener);
-
-    }
-
-
-    View.OnClickListener bananaClickListener = new View.OnClickListener() {
+  View.OnClickListener bananaClickListener =
+      new View.OnClickListener() {
         @Override
         public void onClick(View v) {
 
+          Log.i("TAG", "Banana Clicked");
+          // use the coordinates for whatever
+          imageSwitcher.setImageResource(R.drawable.banana_selected);
 
-            Log.i("TAG", "Banana Clicked");
-            // use the coordinates for whatever
-            imageSwitcher.setImageResource(R.drawable.banana_selected);
+          state.setText(R.string.banana);
 
-            state.setText(R.string.banana);
-
-            handler.postDelayed(new Runnable() {
+          handler.postDelayed(
+              new Runnable() {
 
                 @Override
                 public void run() {
 
-                    ii = new Intent();
+                  ii = new Intent();
 
-                    ii.putExtra("fruit", "banana");
+                  ii.putExtra("fruit", "banana");
 
-                    ii.setClass(OpeningActivity.this, MainActivity.class);
+                  ii.setClass(OpeningActivity.this, MainActivity.class);
 
-                    startActivity(ii);
+                  startActivity(ii);
 
-                    finish();
-
+                  finish();
                 }
-
-            }, 1000L);
-
-
+              },
+              1000L);
         }
+      }; // end-of-clickListener
 
-    }; // end-of-clickListener
-
-    View.OnClickListener orangeClickListener = new View.OnClickListener() {
+  View.OnClickListener orangeClickListener =
+      new View.OnClickListener() {
         @Override
         public void onClick(View v) {
 
+          // use the coordinates for whatever
+          Log.i("TAG", "Orange Clicked");
+          imageSwitcher.setImageResource(R.drawable.orange_selected);
 
-            // use the coordinates for whatever
-            Log.i("TAG", "Orange Clicked");
-            imageSwitcher.setImageResource(R.drawable.orange_selected);
+          state.setText("orange");
 
-            state.setText("orange");
-
-            handler.postDelayed(new Runnable() {
+          handler.postDelayed(
+              new Runnable() {
 
                 @Override
                 public void run() {
 
-                    ii = new Intent();
+                  ii = new Intent();
 
-                    ii.putExtra("fruit", "orange");
+                  ii.putExtra("fruit", "orange");
 
-                    ii.setClass(OpeningActivity.this, MainActivity.class);
+                  ii.setClass(OpeningActivity.this, MainActivity.class);
 
-                    startActivity(ii);
+                  startActivity(ii);
 
-                    finish();
-
+                  finish();
                 }
+              },
+              1000L);
+        }
+      }; // end-of-clickListener
 
-            }, 1000L);
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    Log.i(DEBUG_TAG, "OnDestroy()");
+  }
 
+  @Override
+  protected void onStart() {
+    super.onStart();
+    Log.i(DEBUG_TAG, "OnStart()");
+  }
 
-            }
+  @Override
+  protected void onRestart() {
+    super.onRestart();
+    Log.i(DEBUG_TAG, "OnRestart()");
+  }
 
-    };  // end-of-clickListener
+  @Override
+  protected void onResume() {
+    super.onResume();
+    Log.i(DEBUG_TAG, "OnResume()");
+  }
 
+  @Override
+  protected void onPause() {
+    super.onPause();
+    Log.i(DEBUG_TAG, "OnPause()");
+  }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.i(DEBUG_TAG, "OnDestroy()");
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.i(DEBUG_TAG, "OnStart()");
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.i(DEBUG_TAG, "OnRestart()");
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.i(DEBUG_TAG, "OnResume()");
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.i(DEBUG_TAG, "OnPause()");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.i(DEBUG_TAG, "OnStop()");
-    }
-
-
+  @Override
+  protected void onStop() {
+    super.onStop();
+    Log.i(DEBUG_TAG, "OnStop()");
+  }
 }

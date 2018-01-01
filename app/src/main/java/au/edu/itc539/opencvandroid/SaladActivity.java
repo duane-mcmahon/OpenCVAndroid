@@ -1,4 +1,5 @@
 package au.edu.itc539.opencvandroid;
+// android
 
 import android.Manifest;
 import android.app.Activity;
@@ -52,12 +53,21 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
+// animation
+// java
+// OpenCV Classes
 
 /**
+ * <b> Detects an orange AND a banana in real time </b> using <br />
+ * the camera of an android phone or tablet. Developed on a <br />
+ * motorola moto z play. <br />
  *
+ * @author Duane McMahon
+ * @version 1.0
+ * @since 07-01-2018
  */
-public class SaladActivity extends AppCompatActivity implements
-    CameraBridgeViewBase.CvCameraViewListener2, SensorEventListener {
+public class SaladActivity extends AppCompatActivity
+    implements CameraBridgeViewBase.CvCameraViewListener2, SensorEventListener {
 
   private final Scalar ORANGE = new Scalar(255, 140, 0);
 
@@ -65,9 +75,9 @@ public class SaladActivity extends AppCompatActivity implements
 
   private static final long TIMEOUT = 1000L;
 
-  private BlockingQueue<CvCameraViewFrame> frames = new LinkedBlockingQueue<>(8);
+  private BlockingQueue<CvCameraViewFrame> frames = new LinkedBlockingQueue<>(4);
 
-  private BlockingQueue<Mat> outFrames = new LinkedBlockingQueue<>(8);
+  private BlockingQueue<Mat> outFrames = new LinkedBlockingQueue<>(4);
 
   private Hashtable<Integer, Integer> bananaBuckts = new Hashtable<>();
 
@@ -77,7 +87,7 @@ public class SaladActivity extends AppCompatActivity implements
 
   private Hashtable<Integer, Rect> orangeCue = new Hashtable<>();
 
-  public static final int JAVA_DETECTOR = 0;
+  private static final int JAVA_DETECTOR = 0;
   // Used for logging success or failure messages
   private static final String TAG = "SaladActivity";
 
@@ -91,7 +101,6 @@ public class SaladActivity extends AppCompatActivity implements
   private String[] mDetectorName;
 
   private CascadeClassifier bananaJavaDetector, orangeJavaDetector;
-
   private Mat mRgba, mGray;
 
   private float mRelativeFruitSize = 0.2f;
@@ -123,108 +132,108 @@ public class SaladActivity extends AppCompatActivity implements
   private int mWidth, mHeight;
 
   private Point centre;
+  // initialize and load the opencv libraries and modules
+  private BaseLoaderCallback mLoaderCallback =
+      new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+          switch (status) {
+            case LoaderCallbackInterface.SUCCESS: {
+              Log.i(TAG, "OpenCV loaded successfully.");
 
+              try {
+                // load cascade file from application resources
+                InputStream is =
+                    getResources()
+                        .openRawResource(
+                            getResources().getIdentifier(banana, "raw", getPackageName()));
 
-  private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-    @Override
-    public void onManagerConnected(int status) {
-      switch (status) {
-        case LoaderCallbackInterface.SUCCESS: {
+                File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+                bananaCascadeFile = new File(cascadeDir, banana + ".xml");
+                FileOutputStream os = new FileOutputStream(bananaCascadeFile);
 
-          Log.i(TAG, "OpenCV loaded successfully.");
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                  os.write(buffer, 0, bytesRead);
+                }
+                is.close();
+                os.close();
 
-          try {
-            // load cascade file from application resources
-            InputStream is = getResources().openRawResource(
-                getResources().getIdentifier(banana, "raw", getPackageName()));
+                bananaJavaDetector = new CascadeClassifier(bananaCascadeFile.getAbsolutePath());
 
-            File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-            bananaCascadeFile = new File(cascadeDir, banana + ".xml");
-            FileOutputStream os = new FileOutputStream(bananaCascadeFile);
+                if (bananaJavaDetector.empty()) {
+                  Log.e(TAG, "Failed to load banana cascade classifier");
+                  bananaJavaDetector = null;
+                } else {
+                  Log.i(
+                      TAG,
+                      "Loaded cascade classifier from " + bananaCascadeFile.getAbsolutePath());
+                }
 
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-              os.write(buffer, 0, bytesRead);
+              } catch (IOException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Failed to load banana detection cascade. Exception thrown: " + e);
+              }
+
+              try {
+                // load cascade file from application resources
+                InputStream is =
+                    getResources()
+                        .openRawResource(
+                            getResources().getIdentifier(orange, "raw", getPackageName()));
+
+                File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+                orangeCascadeFile = new File(cascadeDir, orange + ".xml");
+                FileOutputStream os = new FileOutputStream(orangeCascadeFile);
+
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                  os.write(buffer, 0, bytesRead);
+                }
+                is.close();
+                os.close();
+
+                orangeJavaDetector = new CascadeClassifier(orangeCascadeFile.getAbsolutePath());
+
+                if (orangeJavaDetector.empty()) {
+                  Log.e(TAG, "Failed to load orange cascade classifier");
+                  orangeJavaDetector = null;
+                } else {
+                  Log.i(
+                      TAG,
+                      "Loaded cascade classifier from " + orangeCascadeFile.getAbsolutePath());
+                }
+
+              } catch (IOException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Failed to load orange detection cascade. Exception thrown: " + e);
+              }
+
+              portrait_label = findViewById(R.id.fruit_target_portrait);
+
+              landscape_label = findViewById(R.id.fruit_target_landscape);
+
+              landscape_label.setText(fruit_classifier);
+
+              rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
+
+              iv = findViewById(R.id.fruitDetectedView);
+
+              last = findViewById(R.id.lastFruits);
+
+              mOpenCvCameraView.enableView();
             }
-            is.close();
-            os.close();
+            break;
 
-            bananaJavaDetector = new CascadeClassifier(bananaCascadeFile.getAbsolutePath());
-
-            if (bananaJavaDetector.empty()) {
-              Log.e(TAG, "Failed to load banana cascade classifier");
-              bananaJavaDetector = null;
-            } else {
-              Log.i(TAG, "Loaded cascade classifier from " + bananaCascadeFile.getAbsolutePath());
+            default: {
+              super.onManagerConnected(status);
             }
-
-          } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, "Failed to load banana detection cascade. Exception thrown: " + e);
+            break;
           }
-
-          try {
-            // load cascade file from application resources
-            InputStream is = getResources().openRawResource(
-                getResources().getIdentifier(orange, "raw", getPackageName()));
-
-            File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-            orangeCascadeFile = new File(cascadeDir, orange + ".xml");
-            FileOutputStream os = new FileOutputStream(orangeCascadeFile);
-
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-              os.write(buffer, 0, bytesRead);
-            }
-            is.close();
-            os.close();
-
-            orangeJavaDetector = new CascadeClassifier(orangeCascadeFile.getAbsolutePath());
-
-            if (orangeJavaDetector.empty()) {
-              Log.e(TAG, "Failed to load orange cascade classifier");
-              orangeJavaDetector = null;
-            } else {
-              Log.i(TAG, "Loaded cascade classifier from " + orangeCascadeFile.getAbsolutePath());
-            }
-
-          } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, "Failed to load orange detection cascade. Exception thrown: " + e);
-          }
-
-          portrait_label = findViewById(R.id.fruit_target_portrait);
-
-          landscape_label = findViewById(R.id.fruit_target_landscape);
-
-          landscape_label.setText(fruit_classifier);
-
-          rev_landscape_label = findViewById(R.id.fruit_target_reverse_landscape);
-
-          iv = findViewById(R.id.fruitDetectedView);
-
-          last = findViewById(R.id.lastFruits);
-
-          mOpenCvCameraView.enableView();
-
         }
-        break;
-
-        default: {
-
-          super.onManagerConnected(status);
-
-        }
-        break;
-
-      }
-
-    }
-
-  };
-
+      };
 
   public SaladActivity() {
 
@@ -233,9 +242,7 @@ public class SaladActivity extends AppCompatActivity implements
     mDetectorName = new String[2];
 
     mDetectorName[JAVA_DETECTOR] = "Java";
-
   }
-
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -246,12 +253,13 @@ public class SaladActivity extends AppCompatActivity implements
 
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-    //Remove title bar
+    // Remove title bar
     requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-    //Remove notification bar
-    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-        WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    // Remove notification bar
+    getWindow()
+        .setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
     setContentView(R.layout.show_camera_salad);
 
@@ -266,16 +274,13 @@ public class SaladActivity extends AppCompatActivity implements
     String[] PERMISSIONS = {Manifest.permission.CAMERA};
     // First check android version
     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
-      //Check if permission is already granted
-      //thisActivity is your activity. (e.g.: MainActivity.this)
+      // Check if permission is already granted
+      // thisActivity is your activity. (e.g.: MainActivity.this)
       if (!hasPermissions(this, PERMISSIONS)) {
 
         // No explanation needed, we can request the permission.
 
-        ActivityCompat.requestPermissions(this,
-            PERMISSIONS,
-            1);
-
+        ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
       }
     }
 
@@ -295,7 +300,6 @@ public class SaladActivity extends AppCompatActivity implements
     } catch (Exception e) {
 
       Toast.makeText(this, "Hardware compatibility issue", Toast.LENGTH_LONG).show();
-
     }
 
     avi = findViewById(R.id.avi);
@@ -308,116 +312,132 @@ public class SaladActivity extends AppCompatActivity implements
 
     centre = new Point(mWidth, mHeight);
 
-    Thread worker = new Thread() {
-      @Override
-      public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
+    Thread worker =
+        new Thread() {
+          @Override
+          public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
 
-          CvCameraViewFrame inputFrame = null;
+              CvCameraViewFrame inputFrame = null;
 
-          try {
-            inputFrame = frames.poll(TIMEOUT, TimeUnit.MILLISECONDS);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-          if (inputFrame == null) {
-            // timeout. Also, with a try {} catch block poll can be interrupted via
-            //Thread.interrupt() so not to wait for the timeout.
-            continue;
-          }
-
-          final Mat tmp = inputFrame.rgba().clone();
-
-          mRgba = inputFrame.rgba();
-
-          mGray = inputFrame.gray();
-
-          int maxOrangeDetections = 0;
-
-          int maxOrangeDetectionsKey = 0;
-
-          fruitDetect(mGray, mRgba, mAbsoluteFruitSize, mRelativeFruitSize,
-              orangeJavaDetector, orangeBuckts, orangeCue, ORANGE);
-
-          for (Map.Entry<Integer, Integer> e : orangeBuckts.entrySet()) {
-            if (e.getValue() > maxOrangeDetections) {
-              maxOrangeDetections = e.getValue();
-              maxOrangeDetectionsKey = e.getKey();
-            }
-          }
-
-          int maxBananaDetections = 0;
-
-          int maxBananaDetectionsKey = 0;
-
-          fruitDetect(mGray, mRgba, mAbsoluteFruitSize, mRelativeFruitSize,
-              bananaJavaDetector, bananaBuckts, bananaCue, YELLOW);
-
-          outFrames.add(mRgba);
-
-          for (Map.Entry<Integer, Integer> e : bananaBuckts.entrySet()) {
-            if (e.getValue() > maxBananaDetections) {
-              maxBananaDetections = e.getValue();
-              maxBananaDetectionsKey = e.getKey();
-            }
-          }
-
-          if ((maxBananaDetections > 5) && (maxOrangeDetections > 5) && !mOpenCvCameraView
-              .isObjDetected()) {
-
-            mOpenCvCameraView.setObjDetected(true);
-
-            new AsyncTask<Mat, Void, Bitmap>() {
-              @Override
-              protected Bitmap doInBackground(Mat... mats) {
-
-                Mat m = mats[0];
-
-                Imgproc.putText(m, "...nice SALAD! Task complete.", new Point(30, 80),
-                    Core.FONT_HERSHEY_SCRIPT_SIMPLEX, 2.2, YELLOW, 2);
-
-                // convert to bitmap:
-                Bitmap bm = Bitmap.createBitmap(m.cols(), m.rows(), Config.ARGB_8888);
-
-                Utils.matToBitmap(m, bm);
-
-                return bm;
-
+              try {
+                inputFrame = frames.poll(TIMEOUT, TimeUnit.MILLISECONDS);
+              } catch (InterruptedException e) {
+                e.printStackTrace();
+              }
+              if (inputFrame == null) {
+                // timeout. Also, with a try {} catch block poll can be interrupted via
+                // Thread.interrupt() so not to wait for the timeout.
+                continue;
               }
 
-              @Override
-              protected void onPostExecute(Bitmap aVoid) {
+              final Mat tmp = inputFrame.rgba().clone();
 
-                landscape_label.setVisibility(View.GONE);
+              mRgba = inputFrame.rgba();
 
-                portrait_label.setVisibility(View.GONE);
+              mGray = inputFrame.gray();
 
-                rev_landscape_label.setVisibility(View.GONE);
+              int maxOrangeDetections = 0;
 
-                //update ui
-                iv.setImageBitmap(aVoid);
+              int maxOrangeDetectionsKey = 0;
 
-                iv.setVisibility(View.VISIBLE);
+              fruitDetect(
+                  mGray,
+                  mRgba,
+                  mAbsoluteFruitSize,
+                  mRelativeFruitSize,
+                  orangeJavaDetector,
+                  orangeBuckts,
+                  orangeCue,
+                  ORANGE);
 
-                mOpenCvCameraView.disableView();
-
-                last.setVisibility(View.VISIBLE);
-
+              for (Map.Entry<Integer, Integer> e : orangeBuckts.entrySet()) {
+                if (e.getValue() > maxOrangeDetections) {
+                  maxOrangeDetections = e.getValue();
+                  maxOrangeDetectionsKey = e.getKey();
+                }
               }
 
-            }.execute(tmp);
+              int maxBananaDetections = 0;
 
-            orangeBuckts.clear();
+              int maxBananaDetectionsKey = 0;
 
-            bananaBuckts.clear();
+              fruitDetect(
+                  mGray,
+                  mRgba,
+                  mAbsoluteFruitSize,
+                  mRelativeFruitSize,
+                  bananaJavaDetector,
+                  bananaBuckts,
+                  bananaCue,
+                  YELLOW);
 
+              outFrames.add(mRgba);
+
+              for (Map.Entry<Integer, Integer> e : bananaBuckts.entrySet()) {
+                if (e.getValue() > maxBananaDetections) {
+                  maxBananaDetections = e.getValue();
+                  maxBananaDetectionsKey = e.getKey();
+                }
+              }
+
+              if ((maxBananaDetections > 5)
+                  && (maxOrangeDetections > 5)
+                  && !mOpenCvCameraView.isObjDetected()) {
+
+                mOpenCvCameraView.setObjDetected(true);
+
+                new AsyncTask<Mat, Void, Bitmap>() {
+                  @Override
+                  protected Bitmap doInBackground(Mat... mats) {
+
+                    Mat m = mats[0];
+
+                    Imgproc.putText(
+                        m,
+                        "...nice SALAD! Task complete.",
+                        new Point(30, 80),
+                        Core.FONT_HERSHEY_SCRIPT_SIMPLEX,
+                        2.2,
+                        YELLOW,
+                        2);
+
+                    // convert to bitmap:
+                    Bitmap bm = Bitmap.createBitmap(m.cols(), m.rows(), Config.ARGB_8888);
+
+                    Utils.matToBitmap(m, bm);
+
+                    return bm;
+                  }
+
+                  @Override
+                  protected void onPostExecute(Bitmap aVoid) {
+
+                    landscape_label.setVisibility(View.GONE);
+
+                    portrait_label.setVisibility(View.GONE);
+
+                    rev_landscape_label.setVisibility(View.GONE);
+
+                    // update ui
+                    iv.setImageBitmap(aVoid);
+
+                    iv.setVisibility(View.VISIBLE);
+
+                    mOpenCvCameraView.disableView();
+
+                    last.setVisibility(View.VISIBLE);
+                  }
+                }.execute(tmp);
+
+                orangeBuckts.clear();
+
+                bananaBuckts.clear();
+              }
+            }
           }
-
-        }
-      }
-    };
+        };
     worker.start();
-
   }
 
   @Override
@@ -431,7 +451,6 @@ public class SaladActivity extends AppCompatActivity implements
 
     mSensorManager.unregisterListener(this);
   }
-
 
   @Override
   public void onResume() {
@@ -456,11 +475,8 @@ public class SaladActivity extends AppCompatActivity implements
       Sensor s = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
 
       mSensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
-
     }
-
   }
-
 
   public void onDestroy() {
 
@@ -469,26 +485,41 @@ public class SaladActivity extends AppCompatActivity implements
     if (mOpenCvCameraView != null) {
       mOpenCvCameraView.disableView();
     }
-
   }
 
-
+  /**
+   * This method is invoked when camera preview has started. After this method is invoked the
+   * frames will start to be delivered to client via the onCameraFrame() callback.
+   *
+   * @param width -  the width of the frames that will be delivered
+   * @param height - the height of the frames that will be delivered
+   */
+  @Override
   public void onCameraViewStarted(int width, int height) {
 
     mGray = new Mat();
 
     mRgba = new Mat(height, width, CvType.CV_8UC4);
-
   }
 
+  /**
+   * This method is invoked when camera preview has been stopped for some reason. No frames will
+   * be delivered via onCameraFrame() callback after this method is called.
+   */
+  @Override
   public void onCameraViewStopped() {
 
     mGray.release();
 
     mRgba.release();
-
   }
 
+  /**
+   * This method is invoked when delivery of the frame needs to be done. The returned values -
+   * is a modified frame which needs to be displayed on the screen.
+   * @param inputFrame
+   * @return a mat object
+   */
   @Override
   public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
@@ -501,7 +532,6 @@ public class SaladActivity extends AppCompatActivity implements
     } catch (InterruptedException e) {
 
       Log.d(TAG, "No frame captured.");
-
     }
 
     try {
@@ -512,9 +542,7 @@ public class SaladActivity extends AppCompatActivity implements
 
       return rgba;
     }
-
   }
-
 
   @Override
   public void onSensorChanged(SensorEvent event) {
@@ -527,16 +555,21 @@ public class SaladActivity extends AppCompatActivity implements
         update(event.values);
       }
     }
-
   }
 
   @Override
   public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
   }
 
-  private void fruitDetect(Mat gray, Mat colour, int abs, float rel, CascadeClassifier file,
-      Hashtable buckets, Hashtable cues, Scalar colourName) {
+  private void fruitDetect(
+      Mat gray,
+      Mat colour,
+      int abs,
+      float rel,
+      CascadeClassifier file,
+      Hashtable buckets,
+      Hashtable cues,
+      Scalar colourName) {
 
     Mat mGray = gray;
 
@@ -561,18 +594,15 @@ public class SaladActivity extends AppCompatActivity implements
       if (Math.round(height * mRelativeFruitSize) > 0) {
 
         mAbsoluteFruitSize = Math.round(height * mRelativeFruitSize);
-
       }
-
     }
 
     MatOfRect fruit = new MatOfRect();
 
-    if (mJavaDetector != null)
+    if (mJavaDetector != null) {
 
-    {
-      mJavaDetector.detectMultiScale(mGray, fruit, 1.05, 2, 2,
-          new Size(mAbsoluteFruitSize, mAbsoluteFruitSize), new Size());
+      mJavaDetector.detectMultiScale(
+          mGray, fruit, 1.05, 2, 2, new Size(mAbsoluteFruitSize, mAbsoluteFruitSize), new Size());
     }
 
     Rect[] fruitArray = fruit.toArray();
@@ -581,11 +611,11 @@ public class SaladActivity extends AppCompatActivity implements
 
       Imgproc.rectangle(mRgba, aFruitArray.tl(), aFruitArray.br(), COLOUR, 3);
 
-      Point quantizedTL = new Point(((int) (aFruitArray.tl().x / 100)) * 100,
-          ((int) aFruitArray.tl().y / 100));
+      Point quantizedTL =
+          new Point(((int) (aFruitArray.tl().x / 100)) * 100, ((int) aFruitArray.tl().y / 100));
 
-      Point quantizedBR = new Point(((int) (aFruitArray.br().x / 100)) * 100,
-          ((int) aFruitArray.br().y / 100));
+      Point quantizedBR =
+          new Point(((int) (aFruitArray.br().x / 100)) * 100, ((int) aFruitArray.br().y / 100));
 
       int bucktID = quantizedTL.hashCode() + quantizedBR.hashCode() * 2;
 
@@ -598,15 +628,13 @@ public class SaladActivity extends AppCompatActivity implements
       } else {
 
         rectBuckts.put(bucktID, 1);
-
       }
-
     }
-
   }
 
   public static boolean hasPermissions(Context context, String... permissions) {
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1 && context != null
+    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1
+        && context != null
         && permissions != null) {
       for (String permission : permissions) {
         if (ActivityCompat.checkSelfPermission(context, permission)
@@ -618,7 +646,10 @@ public class SaladActivity extends AppCompatActivity implements
     return true;
   }
 
-
+  /**
+   * Updates the ui with information ("rotate 90 degrees") depending on detected rotation.
+   * @param vectors e.g. SensorEvent event values
+   */
   private void update(float[] vectors) {
 
     float[] rotationMatrix = new float[9];
@@ -631,8 +662,8 @@ public class SaladActivity extends AppCompatActivity implements
 
     float[] adjustedRotationMatrix = new float[9];
 
-    SensorManager
-        .remapCoordinateSystem(rotationMatrix, worldAxisX, worldAxisZ, adjustedRotationMatrix);
+    SensorManager.remapCoordinateSystem(
+        rotationMatrix, worldAxisX, worldAxisZ, adjustedRotationMatrix);
 
     float[] orientation = new float[3];
 
@@ -640,7 +671,7 @@ public class SaladActivity extends AppCompatActivity implements
 
     //    float pitch = orientation[1] * FROM_RADS_TO_DEGS;
 
-    float roll = orientation[2] * FROM_RADS_TO_DEGS;    // relevant
+    float roll = orientation[2] * FROM_RADS_TO_DEGS; // relevant
 
     if ((roll >= 70 && roll <= 135)) {
 
@@ -654,7 +685,6 @@ public class SaladActivity extends AppCompatActivity implements
       avi.setVisibility(View.VISIBLE);
 
       rev_landscape_label.setVisibility(View.GONE);
-
     }
 
     if (roll >= -180 && roll <= -70) {
@@ -666,7 +696,6 @@ public class SaladActivity extends AppCompatActivity implements
       avi.setVisibility(View.GONE);
 
       rev_landscape_label.setVisibility(View.VISIBLE);
-
     }
 
     if (roll <= -320 || (roll >= 0 && roll <= 45)) {
@@ -678,9 +707,6 @@ public class SaladActivity extends AppCompatActivity implements
       avi.setVisibility(View.GONE);
 
       rev_landscape_label.setVisibility(View.GONE);
-
     }
-
   }
-
 }

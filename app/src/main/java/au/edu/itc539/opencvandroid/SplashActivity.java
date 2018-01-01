@@ -4,15 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-
 /**
- * Created by duane on 29/11/2017.
+ * The opening title screen. Flashes an image of a bowl of oranges and bananas.
  */
-
 public class SplashActivity extends AppCompatActivity {
 
     private static final String TAG = "SplashActivity";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,5 +21,4 @@ public class SplashActivity extends AppCompatActivity {
         // close splash activity
         finish();
     }
-
 }
