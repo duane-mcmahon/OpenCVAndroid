@@ -1,5 +1,4 @@
 package au.edu.itc539.opencvandroid;
-// android
 
 import android.Manifest;
 import android.app.Activity;
@@ -49,11 +48,6 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
-
-// animation
-// java
-// OpenCV Classes
-
 
 /**
  * <b> Detects an orange or a banana in real time </b> using <br />

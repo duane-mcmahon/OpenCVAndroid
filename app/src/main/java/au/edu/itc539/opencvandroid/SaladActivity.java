@@ -53,10 +53,6 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
-// animation
-// java
-// OpenCV Classes
-
 /**
  * <b> Detects an orange AND a banana in real time </b> using <br />
  * the camera of an android phone or tablet. Developed on a <br />
