@@ -3,8 +3,7 @@ package au.edu.itc539.opencvandroid;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.MotionEvent;
+
 
 /**
  * Created by duane on 29/11/2017.

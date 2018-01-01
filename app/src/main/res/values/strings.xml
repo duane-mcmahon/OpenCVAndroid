@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">OpenCVAndroid</string>
+  <string name="salad_name">An icon depicting a bowl of fruit</string>
+  <string name="correct">An icon that appears when a fruit has been detected.</string>
+  <string name="rotation_90">An icon appears when the device should be rotated by 90 degrees.</string>
+  <string name="rotation_180">An icon appears when the device should be rotated by 180 degrees.</string>
+  <string name="select">SELECT</string>
+  <string name="invisible_button">Invisible button triggered when the fruit is touched.</string>
+  <string name="banana">banana</string>
+  <string name="orange">orange</string>
 </resources>

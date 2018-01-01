@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:opencv="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:clipChildren="false"
+  android:orientation="vertical"
+  tools:context="au.edu.itc539.opencvandroid.SaladActivity">
+
+
+  <RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    android:background="@android:color/transparent">
+
+    <FrameLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent">
+
+      <org.opencv.android.JavaCameraView
+        android:id="@+id/show_camera_activity_java_surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        opencv:camera_id="any"/>
+
+      <ImageView
+        android:id="@+id/fruitDetectedView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:contentDescription="@string/correct"/>
+
+      <ImageButton
+        android:id="@+id/lastFruits"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:layout_gravity="bottom|center"
+        android:visibility="gone"
+        android:src="@drawable/salad"
+        android:contentDescription="@string/salad_name"/>
+
+    </FrameLayout>
+
+    <RelativeLayout
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentBottom="true"
+      android:layout_centerHorizontal="true">
+
+      <TextView
+        android:id="@+id/fruit_target_landscape"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:shadowColor="@color/TransparentGrey"
+        android:shadowDx="-2"
+        android:shadowDy="-2"
+        android:shadowRadius="1"
+        android:textColor="@color/Black"
+        android:textSize="40sp"/>
+
+      <com.wang.avi.AVLoadingIndicatorView
+        android:id="@+id/avi"
+        style="@style/AVLoadingIndicatorView.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/fruit_target_landscape"
+        android:paddingTop="30dp"
+        android:shadowColor="@color/TransparentGrey"
+        app:indicatorColor="@color/Black"
+        app:indicatorName="BallPulseIndicator"/>
+    </RelativeLayout>
+
+  </RelativeLayout>
+
+
+  <ImageView
+    android:id="@+id/fruit_target_portrait"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:rotation="-90"
+    android:src="@drawable/rote90"
+    android:contentDescription="@string/rotation_90"/>
+
+  <au.edu.itc539.opencvandroid.CustView
+    android:id="@+id/fruit_target_reverse_landscape"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:src="@drawable/rote180"
+    android:contentDescription="@string/rotation_180"/>
+</FrameLayout>

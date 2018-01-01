@@ -2,31 +2,16 @@ package au.edu.itc539.opencvandroid;
 
 
 import android.app.Activity;
-
-import android.content.Context;
 import android.content.Intent;
-
-import android.graphics.Bitmap;
-import android.graphics.Rect;
-
-
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.DisplayMetrics;
 import android.util.Log;
-
-import android.view.Display;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import android.widget.ViewSwitcher;
 
 
@@ -74,6 +59,7 @@ public class OpeningActivity extends Activity {
         Animation in = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
 
         imageSwitcher.setInAnimation(in);
+
         ImageView bananaButton = findViewById(R.id.banana_button);
 
         ImageView orangeButton = findViewById(R.id.orange_button);
@@ -94,7 +80,7 @@ public class OpeningActivity extends Activity {
             // use the coordinates for whatever
             imageSwitcher.setImageResource(R.drawable.banana_selected);
 
-            state.setText("banana");
+            state.setText(R.string.banana);
 
             handler.postDelayed(new Runnable() {
 
@@ -118,7 +104,7 @@ public class OpeningActivity extends Activity {
 
         }
 
-    };
+    }; // end-of-clickListener
 
     View.OnClickListener orangeClickListener = new View.OnClickListener() {
         @Override
@@ -153,7 +139,7 @@ public class OpeningActivity extends Activity {
 
             }
 
-    };
+    };  // end-of-clickListener
 
 
     @Override

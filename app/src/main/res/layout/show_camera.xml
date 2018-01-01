@@ -13,7 +13,6 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-
         android:background="@android:color/transparent">
 
         <FrameLayout
@@ -33,7 +32,7 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:visibility="gone"
-                android:text="My Label" />
+              android:contentDescription="@string/correct"/>
 
             <ImageButton
                 android:id="@+id/nextFruit"
@@ -42,8 +41,8 @@
                 android:background="@android:color/transparent"
                 android:layout_gravity="bottom|center"
                 android:visibility="gone"
-                android:src="@drawable/next" />
-
+              android:src="@drawable/next"
+              android:contentDescription="@string/correct"/>
 
         </FrameLayout>
 
@@ -63,7 +62,7 @@
                 android:shadowDy="-2"
                 android:shadowRadius="1"
                 android:textColor="@color/Black"
-                android:textSize="40dp" />
+              android:textSize="40sp"/>
 
             <com.wang.avi.AVLoadingIndicatorView
                 android:id="@+id/avi"
@@ -78,7 +77,6 @@
         </RelativeLayout>
     </RelativeLayout>
 
-
     <ImageView
         android:id="@+id/fruit_target_portrait"
         android:layout_width="wrap_content"
@@ -86,13 +84,13 @@
         android:layout_gravity="center"
         android:rotation="-90"
         android:src="@drawable/rote90"
-        android:text="My Label" />
-
+      android:contentDescription="@string/rotation_90"/>
 
     <au.edu.itc539.opencvandroid.CustView
         android:id="@+id/fruit_target_reverse_landscape"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:src="@drawable/rote180" />
+      android:src="@drawable/rote180"
+      android:contentDescription="@string/rotation_180"/>
 </FrameLayout>
