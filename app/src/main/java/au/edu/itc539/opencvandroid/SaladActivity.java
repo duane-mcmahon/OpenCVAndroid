@@ -1,5 +1,4 @@
 package au.edu.itc539.opencvandroid;
-// android
 
 import android.Manifest;
 import android.app.Activity;
@@ -77,11 +76,7 @@ public class SaladActivity extends AppCompatActivity
 
   private Hashtable<Integer, Integer> bananaBuckts = new Hashtable<>();
 
-  private Hashtable<Integer, Rect> bananaCue = new Hashtable<>();
-
   private Hashtable<Integer, Integer> orangeBuckts = new Hashtable<>();
-
-  private Hashtable<Integer, Rect> orangeCue = new Hashtable<>();
 
   private static final int JAVA_DETECTOR = 0;
   // Used for logging success or failure messages
@@ -271,11 +266,8 @@ public class SaladActivity extends AppCompatActivity
     // First check android version
     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
       // Check if permission is already granted
-      // thisActivity is your activity. (e.g.: MainActivity.this)
       if (!hasPermissions(this, PERMISSIONS)) {
-
-        // No explanation needed, we can request the permission.
-
+        // Request the permission.
         ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
       }
     }
@@ -335,53 +327,47 @@ public class SaladActivity extends AppCompatActivity
 
               int maxOrangeDetections = 0;
 
-              int maxOrangeDetectionsKey = 0;
-
-              fruitDetect(
+              Rect[] oranges = fruitDetect(
                   mGray,
                   mRgba,
                   mAbsoluteFruitSize,
                   mRelativeFruitSize,
                   orangeJavaDetector,
                   orangeBuckts,
-                  orangeCue,
                   ORANGE);
-
-              for (Map.Entry<Integer, Integer> e : orangeBuckts.entrySet()) {
-                if (e.getValue() > maxOrangeDetections) {
-                  maxOrangeDetections = e.getValue();
-                  maxOrangeDetectionsKey = e.getKey();
-                }
-              }
 
               int maxBananaDetections = 0;
 
-              int maxBananaDetectionsKey = 0;
-
-              fruitDetect(
+              Rect[] bananas = fruitDetect(
                   mGray,
                   mRgba,
                   mAbsoluteFruitSize,
                   mRelativeFruitSize,
                   bananaJavaDetector,
                   bananaBuckts,
-                  bananaCue,
                   YELLOW);
 
+              paintRectangles(oranges, ORANGE, orangeBuckts);
+
+              paintRectangles(bananas, YELLOW, bananaBuckts);
+
               outFrames.add(mRgba);
+
+              for (Map.Entry<Integer, Integer> e : orangeBuckts.entrySet()) {
+                if (e.getValue() > maxOrangeDetections) {
+                  maxOrangeDetections = e.getValue();
+                }
+              }
+
 
               for (Map.Entry<Integer, Integer> e : bananaBuckts.entrySet()) {
                 if (e.getValue() > maxBananaDetections) {
                   maxBananaDetections = e.getValue();
-                  maxBananaDetectionsKey = e.getKey();
                 }
               }
-
+              // if both objects are detected consistently in five successive frames...
               if ((maxBananaDetections > 5)
-                  && (maxOrangeDetections > 5)
-                  && !mOpenCvCameraView.isObjDetected()) {
-
-                mOpenCvCameraView.setObjDetected(true);
+                  && (maxOrangeDetections > 5)) {
 
                 new AsyncTask<Mat, Void, Bitmap>() {
                   @Override
@@ -406,6 +392,7 @@ public class SaladActivity extends AppCompatActivity
                     return bm;
                   }
 
+                  // update ui
                   @Override
                   protected void onPostExecute(Bitmap aVoid) {
 
@@ -415,7 +402,6 @@ public class SaladActivity extends AppCompatActivity
 
                     rev_landscape_label.setVisibility(View.GONE);
 
-                    // update ui
                     iv.setImageBitmap(aVoid);
 
                     iv.setVisibility(View.VISIBLE);
@@ -423,6 +409,8 @@ public class SaladActivity extends AppCompatActivity
                     mOpenCvCameraView.disableView();
 
                     last.setVisibility(View.VISIBLE);
+
+                    tmp.release();
                   }
                 }.execute(tmp);
 
@@ -557,14 +545,13 @@ public class SaladActivity extends AppCompatActivity
   public void onAccuracyChanged(Sensor sensor, int accuracy) {
   }
 
-  private void fruitDetect(
+  private Rect[] fruitDetect(
       Mat gray,
       Mat colour,
       int abs,
       float rel,
       CascadeClassifier file,
       Hashtable buckets,
-      Hashtable cues,
       Scalar colourName) {
 
     Mat mGray = gray;
@@ -578,8 +565,6 @@ public class SaladActivity extends AppCompatActivity
     CascadeClassifier mJavaDetector = file;
 
     Hashtable<Integer, Integer> rectBuckts = buckets;
-
-    Hashtable<Integer, Rect> rectCue = cues;
 
     Scalar COLOUR = colourName;
 
@@ -603,6 +588,14 @@ public class SaladActivity extends AppCompatActivity
 
     Rect[] fruitArray = fruit.toArray();
 
+    return fruitArray;
+
+  }
+
+
+  private void paintRectangles(Rect[] fruitArray, Scalar COLOUR,
+      Hashtable<Integer, Integer> rectBuckts) {
+
     for (Rect aFruitArray : fruitArray) {
 
       Imgproc.rectangle(mRgba, aFruitArray.tl(), aFruitArray.br(), COLOUR, 3);
@@ -619,15 +612,22 @@ public class SaladActivity extends AppCompatActivity
 
         rectBuckts.put(bucktID, rectBuckts.get(bucktID) + 1);
 
-        rectCue.put(bucktID, new Rect(quantizedTL, quantizedBR));
-
       } else {
 
         rectBuckts.put(bucktID, 1);
+
       }
+
     }
+
   }
 
+  /**
+   * Helper method for acquiring permissions to use hardware features
+   *
+   * @param context i.e this Activity (e.g.: MainActivity.this)
+   * @param permissions e.g. CAMERA, WRITE_EXTERNAL_STORAGE
+   */
   public static boolean hasPermissions(Context context, String... permissions) {
     if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1
         && context != null
@@ -643,7 +643,7 @@ public class SaladActivity extends AppCompatActivity
   }
 
   /**
-   * Updates the ui with information ("rotate 90 degrees") depending on detected rotation.
+   * Updates the ui with information ("motion 90 degrees") depending on detected rotation.
    * @param vectors e.g. SensorEvent event values
    */
   private void update(float[] vectors) {
@@ -673,10 +673,7 @@ public class SaladActivity extends AppCompatActivity
 
       portrait_label.setVisibility(View.GONE);
 
-      if (!mOpenCvCameraView.isObjDetected()) {
-
-        landscape_label.setVisibility(View.VISIBLE);
-      }
+      landscape_label.setVisibility(View.VISIBLE);
 
       avi.setVisibility(View.VISIBLE);
 
