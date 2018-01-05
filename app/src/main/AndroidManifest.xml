@@ -3,6 +3,7 @@
     package="au.edu.itc539.opencvandroid">
 
     <application
+      android:label="Fruity"
       android:name="au.edu.itc539.opencvandroid.Detectable"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"

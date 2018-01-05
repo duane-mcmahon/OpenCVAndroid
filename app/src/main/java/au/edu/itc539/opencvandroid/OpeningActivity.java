@@ -1,9 +1,14 @@
 package au.edu.itc539.opencvandroid;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -39,6 +44,16 @@ public class OpeningActivity extends Activity {
 
     setContentView(R.layout.show_opening);
 
+    String[] PERMISSIONS = {Manifest.permission.CAMERA};
+    // First check android version
+    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+      // Check if permission is already granted
+      if (!hasPermissions(this, PERMISSIONS)) {
+        // Request the permission.
+        ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
+      }
+    }
+
     state = findViewById(R.id.select);
 
     imageSwitcher = findViewById(R.id.opening_image);
@@ -67,6 +82,7 @@ public class OpeningActivity extends Activity {
     bananaButton.setOnClickListener(bananaClickListener);
 
     orangeButton.setOnClickListener(orangeClickListener);
+
   }
 
   View.OnClickListener bananaClickListener =
@@ -167,5 +183,25 @@ public class OpeningActivity extends Activity {
   protected void onStop() {
     super.onStop();
     Log.i(DEBUG_TAG, "OnStop()");
+  }
+
+  /**
+   * Helper method for acquiring permissions to use hardware features
+   *
+   * @param context i.e this Activity (e.g.: MainActivity.this)
+   * @param permissions e.g. CAMERA, WRITE_EXTERNAL_STORAGE
+   */
+  public static boolean hasPermissions(Context context, String... permissions) {
+    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1
+        && context != null
+        && permissions != null) {
+      for (String permission : permissions) {
+        if (ActivityCompat.checkSelfPermission(context, permission)
+            != PackageManager.PERMISSION_GRANTED) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 }

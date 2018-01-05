@@ -3,8 +3,8 @@
     <!-- Base application theme. -->
     <style name="AppBaseTheme" parent="Theme.AppCompat.Light">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+      <item name="colorPrimary">@color/Black</item>
+      <item name="colorPrimaryDark">@color/Black</item>
         <item name="colorAccent">@color/colorAccent</item>
 
     </style>
@@ -12,6 +12,9 @@
     <style name="AppBaseTheme.SplashActivity">
         <!-- Opening theme-->
         <item name="android:windowBackground">@drawable/splash_background</item>
+      <item name="android:text">Fruity</item>
+      <item name="android:windowNoTitle">true</item>
+
     </style>
 
     <style name="AppBaseTheme.OpeningActivity">

@@ -1,9 +1,7 @@
 package au.edu.itc539.opencvandroid;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.hardware.Sensor;
@@ -11,11 +9,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
@@ -236,6 +233,12 @@ public class SaladActivity extends AppCompatActivity
   }
 
   @Override
+  public boolean dispatchTouchEvent(MotionEvent ev) {
+    finish();
+    return super.dispatchTouchEvent(ev);
+  }
+
+  @Override
   protected void onCreate(Bundle savedInstanceState) {
 
     Log.i(TAG, "called onCreate");
@@ -261,16 +264,6 @@ public class SaladActivity extends AppCompatActivity
     mOpenCvCameraView.setCvCameraViewListener(this);
 
     mOpenCvCameraView.setCameraIndex(0);
-
-    String[] PERMISSIONS = {Manifest.permission.CAMERA};
-    // First check android version
-    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
-      // Check if permission is already granted
-      if (!hasPermissions(this, PERMISSIONS)) {
-        // Request the permission.
-        ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
-      }
-    }
 
     // Get an instance of the SensorManager
     try {
@@ -327,25 +320,21 @@ public class SaladActivity extends AppCompatActivity
 
               int maxOrangeDetections = 0;
 
-              Rect[] oranges = fruitDetect(
+              Rect[] oranges = detectFruit(
                   mGray,
-                  mRgba,
                   mAbsoluteFruitSize,
                   mRelativeFruitSize,
-                  orangeJavaDetector,
-                  orangeBuckts,
-                  ORANGE);
+                  orangeJavaDetector
+              );
 
               int maxBananaDetections = 0;
 
-              Rect[] bananas = fruitDetect(
+              Rect[] bananas = detectFruit(
                   mGray,
-                  mRgba,
                   mAbsoluteFruitSize,
                   mRelativeFruitSize,
-                  bananaJavaDetector,
-                  bananaBuckts,
-                  YELLOW);
+                  bananaJavaDetector
+              );
 
               paintRectangles(oranges, ORANGE, orangeBuckts);
 
@@ -377,7 +366,7 @@ public class SaladActivity extends AppCompatActivity
 
                     Imgproc.putText(
                         m,
-                        "...nice SALAD! Task complete.",
+                        "...nice SALAD! Tap to exit the demo.",
                         new Point(30, 80),
                         Core.FONT_HERSHEY_SCRIPT_SIMPLEX,
                         2.2,
@@ -545,44 +534,31 @@ public class SaladActivity extends AppCompatActivity
   public void onAccuracyChanged(Sensor sensor, int accuracy) {
   }
 
-  private Rect[] fruitDetect(
+  private Rect[] detectFruit(
       Mat gray,
-      Mat colour,
       int abs,
       float rel,
-      CascadeClassifier file,
-      Hashtable buckets,
-      Scalar colourName) {
+      CascadeClassifier classifier) {
 
     Mat mGray = gray;
 
-    Mat mRgba = colour;
-
     int mAbsoluteFruitSize = abs;
-
-    float mRelativeFruitSize = rel;
-
-    CascadeClassifier mJavaDetector = file;
-
-    Hashtable<Integer, Integer> rectBuckts = buckets;
-
-    Scalar COLOUR = colourName;
 
     if (mAbsoluteFruitSize == 0) {
 
       int height = mGray.rows();
 
-      if (Math.round(height * mRelativeFruitSize) > 0) {
+      if (Math.round(height * rel) > 0) {
 
-        mAbsoluteFruitSize = Math.round(height * mRelativeFruitSize);
+        mAbsoluteFruitSize = Math.round(height * rel);
       }
     }
 
     MatOfRect fruit = new MatOfRect();
 
-    if (mJavaDetector != null) {
+    if (classifier != null) {
 
-      mJavaDetector.detectMultiScale(
+      classifier.detectMultiScale(
           mGray, fruit, 1.05, 2, 2, new Size(mAbsoluteFruitSize, mAbsoluteFruitSize), new Size());
     }
 
@@ -620,26 +596,6 @@ public class SaladActivity extends AppCompatActivity
 
     }
 
-  }
-
-  /**
-   * Helper method for acquiring permissions to use hardware features
-   *
-   * @param context i.e this Activity (e.g.: MainActivity.this)
-   * @param permissions e.g. CAMERA, WRITE_EXTERNAL_STORAGE
-   */
-  public static boolean hasPermissions(Context context, String... permissions) {
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1
-        && context != null
-        && permissions != null) {
-      for (String permission : permissions) {
-        if (ActivityCompat.checkSelfPermission(context, permission)
-            != PackageManager.PERMISSION_GRANTED) {
-          return false;
-        }
-      }
-    }
-    return true;
   }
 
   /**

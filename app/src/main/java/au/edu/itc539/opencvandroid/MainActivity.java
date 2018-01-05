@@ -1,19 +1,15 @@
 package au.edu.itc539.opencvandroid;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -233,16 +229,6 @@ public class MainActivity extends AppCompatActivity
     mOpenCvCameraView.setCvCameraViewListener(this);
 
     mOpenCvCameraView.setCameraIndex(0);
-
-    String[] PERMISSIONS = {Manifest.permission.CAMERA};
-    // First check android version
-    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
-      // Check if permission is already granted
-      if (!hasPermissions(this, PERMISSIONS)) {
-        // Request the permission.
-        ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
-      }
-    }
     // Get an instance of the SensorManager
     try {
 
@@ -366,7 +352,9 @@ public class MainActivity extends AppCompatActivity
   public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 
     final Mat tmp = inputFrame.rgba().clone();
+
     mRgba = inputFrame.rgba();
+
     mGray = inputFrame.gray();
 
     if (mAbsoluteFruitSize == 0) {
@@ -423,9 +411,7 @@ public class MainActivity extends AppCompatActivity
         maxDetectionsKey = e.getKey();
       }
     }
-    if (maxDetections > 5 && !mOpenCvCameraView.isObjDetected()) {
-
-      mOpenCvCameraView.setObjDetected(true);
+    if (maxDetections > 5) {
 
       new AsyncTask<Mat, Void, Bitmap>() {
         @Override
@@ -443,7 +429,7 @@ public class MainActivity extends AppCompatActivity
               2);
 
           // convert to bitmap:
-          final Bitmap bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+          Bitmap bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
 
           Utils.matToBitmap(m, bm);
 
@@ -463,6 +449,9 @@ public class MainActivity extends AppCompatActivity
           nxt.setVisibility(View.VISIBLE);
 
           landscape_label.setVisibility(View.GONE);
+
+          tmp.release();
+
         }
       }.execute(tmp);
 
@@ -473,7 +462,7 @@ public class MainActivity extends AppCompatActivity
   }
 
   /**
-   * Updates the ui with information ("rotate 90 degrees") depending on detected rotation.
+   * Updates the ui with information ("motion 90 degrees") depending on detected rotation.
    * @param vectors e.g. SensorEvent event values
    */
   private void update(float[] vectors) {
@@ -503,10 +492,7 @@ public class MainActivity extends AppCompatActivity
 
       portrait_label.setVisibility(View.GONE);
 
-      if (!mOpenCvCameraView.isObjDetected()) {
-
-        landscape_label.setVisibility(View.VISIBLE);
-      }
+      landscape_label.setVisibility(View.VISIBLE);
 
       avi.setVisibility(View.VISIBLE);
 
@@ -554,26 +540,6 @@ public class MainActivity extends AppCompatActivity
   public void onAccuracyChanged(Sensor sensor, int accuracy) {
   }
 
-  /**
-   * Helper method for acquiring permissions to use hardware features
-   * @param context i.e this Activity (e.g.: MainActivity.this)
-   * @param permissions e.g. CAMERA, WRITE_EXTERNAL_STORAGE
-   * @return
-   */
-  public static boolean hasPermissions(Context context, String... permissions) {
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1
-        && context != null
-        && permissions != null) {
-      for (String permission : permissions) {
-        if (ActivityCompat.checkSelfPermission(context, permission)
-            != PackageManager.PERMISSION_GRANTED) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
   View.OnClickListener clickListener =
       new View.OnClickListener() {
         @Override
@@ -582,8 +548,6 @@ public class MainActivity extends AppCompatActivity
           int index;
 
           Log.i("TAG", "Next object to identify");
-
-          mOpenCvCameraView.setObjDetected(false);
 
           if (undetected.detectables.size() > 1) {
 

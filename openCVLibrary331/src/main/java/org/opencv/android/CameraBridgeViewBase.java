@@ -1,14 +1,5 @@
 package org.opencv.android;
 
-import java.io.FileOutputStream;
-import java.util.List;
-
-import org.opencv.BuildConfig;
-import org.opencv.R;
-import org.opencv.core.Mat;
-import org.opencv.core.Size;
-
-import android.hardware.Camera.PictureCallback;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -16,12 +7,16 @@ import android.content.DialogInterface;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import java.util.List;
+import org.opencv.BuildConfig;
+import org.opencv.R;
+import org.opencv.core.Mat;
+import org.opencv.core.Size;
 
 /**
  * This is a basic class, implementing the interaction with Camera and OpenCV library.
@@ -33,17 +28,6 @@ import android.view.SurfaceView;
 public abstract class CameraBridgeViewBase extends SurfaceView implements SurfaceHolder.Callback {
 
     private static final String TAG = "CameraBridge";
-
-    public boolean isObjDetected() {
-        return objDetected;
-    }
-
-    public void setObjDetected(boolean objDetected) {
-        this.objDetected = objDetected;
-    }
-
-    private boolean objDetected;
-
     private static final int MAX_UNSPECIFIED = -1;
     private static final int STOPPED = 0;
     private static final int STARTED = 1;
@@ -76,14 +60,13 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         getHolder().addCallback(this);
         mMaxWidth = MAX_UNSPECIFIED;
         mMaxHeight = MAX_UNSPECIFIED;
-        setObjDetected(false);
     }
 
     public CameraBridgeViewBase(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         int count = attrs.getAttributeCount();
-        Log.d(TAG, "Attr count: " + Integer.valueOf(count));
+        Log.d(TAG, "Attr count: " + count);
 
         TypedArray styledAttrs = getContext().obtainStyledAttributes(attrs, R.styleable.CameraBridgeViewBase);
         if (styledAttrs.getBoolean(R.styleable.CameraBridgeViewBase_show_fps, false))
