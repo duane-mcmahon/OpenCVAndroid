@@ -9,7 +9,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -37,8 +36,6 @@ public class OpeningActivity extends Activity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-
-    Log.i(DEBUG_TAG, "Called onCreate of OpeningActivity...");
 
     super.onCreate(savedInstanceState);
 
@@ -90,7 +87,6 @@ public class OpeningActivity extends Activity {
         @Override
         public void onClick(View v) {
 
-          Log.i("TAG", "Banana Clicked");
           // use the coordinates for whatever
           imageSwitcher.setImageResource(R.drawable.banana_selected);
 
@@ -123,7 +119,6 @@ public class OpeningActivity extends Activity {
         public void onClick(View v) {
 
           // use the coordinates for whatever
-          Log.i("TAG", "Orange Clicked");
           imageSwitcher.setImageResource(R.drawable.orange_selected);
 
           state.setText("orange");
@@ -152,37 +147,37 @@ public class OpeningActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    Log.i(DEBUG_TAG, "OnDestroy()");
+
   }
 
   @Override
   protected void onStart() {
     super.onStart();
-    Log.i(DEBUG_TAG, "OnStart()");
+
   }
 
   @Override
   protected void onRestart() {
     super.onRestart();
-    Log.i(DEBUG_TAG, "OnRestart()");
+
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-    Log.i(DEBUG_TAG, "OnResume()");
+
   }
 
   @Override
   protected void onPause() {
     super.onPause();
-    Log.i(DEBUG_TAG, "OnPause()");
+
   }
 
   @Override
   protected void onStop() {
     super.onStop();
-    Log.i(DEBUG_TAG, "OnStop()");
+
   }
 
   /**

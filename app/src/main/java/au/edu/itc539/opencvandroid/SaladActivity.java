@@ -11,7 +11,6 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
@@ -76,9 +75,6 @@ public class SaladActivity extends AppCompatActivity
   private Hashtable<Integer, Integer> orangeBuckts = new Hashtable<>();
 
   private static final int JAVA_DETECTOR = 0;
-  // Used for logging success or failure messages
-  private static final String TAG = "SaladActivity";
-
   // Loads camera view of OpenCV for us to use. This lets us see using OpenCV
   private JavaCameraView mOpenCvCameraView;
 
@@ -127,7 +123,6 @@ public class SaladActivity extends AppCompatActivity
         public void onManagerConnected(int status) {
           switch (status) {
             case LoaderCallbackInterface.SUCCESS: {
-              Log.i(TAG, "OpenCV loaded successfully.");
 
               try {
                 // load cascade file from application resources
@@ -151,17 +146,12 @@ public class SaladActivity extends AppCompatActivity
                 bananaJavaDetector = new CascadeClassifier(bananaCascadeFile.getAbsolutePath());
 
                 if (bananaJavaDetector.empty()) {
-                  Log.e(TAG, "Failed to load banana cascade classifier");
+
                   bananaJavaDetector = null;
-                } else {
-                  Log.i(
-                      TAG,
-                      "Loaded cascade classifier from " + bananaCascadeFile.getAbsolutePath());
                 }
 
               } catch (IOException e) {
                 e.printStackTrace();
-                Log.e(TAG, "Failed to load banana detection cascade. Exception thrown: " + e);
               }
 
               try {
@@ -186,17 +176,11 @@ public class SaladActivity extends AppCompatActivity
                 orangeJavaDetector = new CascadeClassifier(orangeCascadeFile.getAbsolutePath());
 
                 if (orangeJavaDetector.empty()) {
-                  Log.e(TAG, "Failed to load orange cascade classifier");
                   orangeJavaDetector = null;
-                } else {
-                  Log.i(
-                      TAG,
-                      "Loaded cascade classifier from " + orangeCascadeFile.getAbsolutePath());
                 }
 
               } catch (IOException e) {
                 e.printStackTrace();
-                Log.e(TAG, "Failed to load orange detection cascade. Exception thrown: " + e);
               }
 
               portrait_label = findViewById(R.id.fruit_target_portrait);
@@ -225,8 +209,6 @@ public class SaladActivity extends AppCompatActivity
 
   public SaladActivity() {
 
-    Log.i(TAG, "Instantiated new " + this.getClass());
-
     mDetectorName = new String[2];
 
     mDetectorName[JAVA_DETECTOR] = "Java";
@@ -240,8 +222,6 @@ public class SaladActivity extends AppCompatActivity
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-
-    Log.i(TAG, "called onCreate");
 
     super.onCreate(savedInstanceState);
 
@@ -432,13 +412,9 @@ public class SaladActivity extends AppCompatActivity
 
     if (!OpenCVLoader.initDebug()) {
 
-      Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-
       OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallback);
 
     } else {
-
-      Log.d(TAG, "OpenCV library found inside package. Using it!");
 
       mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
     }
@@ -504,7 +480,6 @@ public class SaladActivity extends AppCompatActivity
 
     } catch (InterruptedException e) {
 
-      Log.d(TAG, "No frame captured.");
     }
 
     try {

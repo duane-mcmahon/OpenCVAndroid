@@ -11,7 +11,6 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
@@ -113,7 +112,6 @@ public class MainActivity extends AppCompatActivity
         public void onManagerConnected(int status) {
           switch (status) {
             case LoaderCallbackInterface.SUCCESS: {
-              Log.i(TAG, "OpenCV loaded successfully");
 
               Intent iin = getIntent();
 
@@ -122,8 +120,6 @@ public class MainActivity extends AppCompatActivity
               if (b != null) {
                 fruit_classifier = (String) b.get("fruit");
               }
-
-              Log.i(TAG, "OpenCV loaded successfully. Fruit: " + fruit_classifier);
 
               try {
                 // load cascade file from application resources
@@ -156,12 +152,8 @@ public class MainActivity extends AppCompatActivity
 
                 if (mJavaDetector.empty()) {
 
-                  Log.e(TAG, "Failed to load cascade classifier");
-
                   mJavaDetector = null;
 
-                } else {
-                  Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
                 }
 
                 cascadeDir.delete();
@@ -169,8 +161,6 @@ public class MainActivity extends AppCompatActivity
               } catch (IOException e) {
 
                 e.printStackTrace();
-
-                Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
               }
 
               portrait_label = findViewById(R.id.fruit_target_portrait);
@@ -198,8 +188,6 @@ public class MainActivity extends AppCompatActivity
 
   public MainActivity() {
 
-    Log.i(TAG, "Instantiated new " + this.getClass());
-
     mDetectorName = new String[2];
 
     mDetectorName[JAVA_DETECTOR] = "Java";
@@ -207,8 +195,6 @@ public class MainActivity extends AppCompatActivity
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-
-    Log.i(TAG, "...called onCreate.");
 
     super.onCreate(savedInstanceState);
 
@@ -265,8 +251,6 @@ public class MainActivity extends AppCompatActivity
   @Override
   public void onPause() {
 
-    Log.i(TAG, "...called onPause.");
-
     super.onPause();
 
     if (mOpenCvCameraView != null) {
@@ -279,19 +263,13 @@ public class MainActivity extends AppCompatActivity
   @Override
   public void onResume() {
 
-    Log.i(TAG, "...called onResume.");
-
     super.onResume();
 
     if (!OpenCVLoader.initDebug()) {
 
-      Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-
       OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallback);
 
     } else {
-
-      Log.d(TAG, "OpenCV library found inside package. Using it!");
 
       mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
     }
@@ -306,8 +284,6 @@ public class MainActivity extends AppCompatActivity
 
   @Override
   public void onDestroy() {
-
-    Log.i(TAG, "...called onDestroy.");
 
     super.onDestroy();
 
@@ -371,8 +347,6 @@ public class MainActivity extends AppCompatActivity
         mJavaDetector.detectMultiScale(
             mGray, fruit, 1.05, 2, 2, new Size(mAbsoluteFruitSize, mAbsoluteFruitSize), new Size());
       }
-    } else {
-      Log.e(TAG, "Detection method is not selected!");
     }
 
     Rect[] fruitArray = fruit.toArray();
@@ -546,8 +520,6 @@ public class MainActivity extends AppCompatActivity
         public void onClick(View v) {
 
           int index;
-
-          Log.i("TAG", "Next object to identify");
 
           if (undetected.detectables.size() > 1) {
 
