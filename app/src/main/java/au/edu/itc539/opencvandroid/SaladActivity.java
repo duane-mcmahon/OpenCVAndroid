@@ -89,7 +89,8 @@ public class SaladActivity extends AppCompatActivity
   private String[] mDetectorName;
 
   private CascadeClassifier bananaJavaDetector, orangeJavaDetector;
-  private Mat mRgba, mGray;
+
+  private Mat mRgba, mGray, tmp;
 
   private float mRelativeFruitSize = 0.2f;
 
@@ -312,7 +313,7 @@ public class SaladActivity extends AppCompatActivity
                 continue;
               }
 
-              final Mat tmp = inputFrame.rgba().clone();
+              tmp = inputFrame.rgba().clone();
 
               mRgba = inputFrame.rgba();
 
@@ -355,8 +356,8 @@ public class SaladActivity extends AppCompatActivity
                 }
               }
               // if both objects are detected consistently in five successive frames...
-              if ((maxBananaDetections > 5)
-                  && (maxOrangeDetections > 5)) {
+              if ((maxBananaDetections >= 5)
+                  && (maxOrangeDetections >= 5)) {
 
                 new AsyncTask<Mat, Void, Bitmap>() {
                   @Override
@@ -399,7 +400,6 @@ public class SaladActivity extends AppCompatActivity
 
                     last.setVisibility(View.VISIBLE);
 
-                    tmp.release();
                   }
                 }.execute(tmp);
 

@@ -77,11 +77,11 @@ public class MainActivity extends AppCompatActivity
 
   private CascadeClassifier mJavaDetector;
 
-  private Mat mRgba, mGray;
+  private Mat mRgba, mGray, tmp, modified;
 
   private float mRelativeFruitSize = 0.2f;
 
-  private int mAbsoluteFruitSize;
+  private int mAbsoluteFruitSize, count;
 
   private ImageView portrait_label, rev_landscape_label, iv, nextButton;
 
@@ -104,6 +104,10 @@ public class MainActivity extends AppCompatActivity
   private int mWidth, mHeight;
 
   private Point centre;
+
+  private Bitmap bm;
+
+
 
   private Detectable undetected;
   // initialize and load the opencv libraries and modules
@@ -325,9 +329,8 @@ public class MainActivity extends AppCompatActivity
   @Override
   public void onCameraViewStarted(int width, int height) {
 
-    mGray = new Mat();
-
     mRgba = new Mat(height, width, CvType.CV_8UC4);
+
   }
 
   /**
@@ -340,6 +343,9 @@ public class MainActivity extends AppCompatActivity
     mGray.release();
 
     mRgba.release();
+
+    tmp.release();
+
   }
 
   /**
@@ -351,7 +357,7 @@ public class MainActivity extends AppCompatActivity
   @Override
   public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 
-    final Mat tmp = inputFrame.rgba().clone();
+    tmp = inputFrame.rgba().clone();
 
     mRgba = inputFrame.rgba();
 
@@ -364,12 +370,14 @@ public class MainActivity extends AppCompatActivity
       }
     }
 
+
     MatOfRect fruit = new MatOfRect();
 
     if (mDetectorType == JAVA_DETECTOR) {
       if (mJavaDetector != null) {
         mJavaDetector.detectMultiScale(
             mGray, fruit, 1.05, 2, 2, new Size(mAbsoluteFruitSize, mAbsoluteFruitSize), new Size());
+        mGray.release();
       }
     } else {
       Log.e(TAG, "Detection method is not selected!");
@@ -417,10 +425,10 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected Bitmap doInBackground(Mat... mats) {
 
-          Mat m = mats[0];
+          modified = mats[0];
 
           Imgproc.putText(
-              m,
+              modified,
               "...nice choice!",
               new Point(30, 80),
               Core.FONT_HERSHEY_PLAIN,
@@ -429,11 +437,14 @@ public class MainActivity extends AppCompatActivity
               2);
 
           // convert to bitmap:
-          Bitmap bm = Bitmap.createBitmap(m.cols(), m.rows(), Bitmap.Config.ARGB_8888);
+          bm = Bitmap.createBitmap(modified.cols(), modified.rows(), Bitmap.Config.ARGB_8888);
 
-          Utils.matToBitmap(m, bm);
+          Utils.matToBitmap(modified, bm);
+
+          modified.release();
 
           return bm;
+
         }
 
         @Override
@@ -450,15 +461,15 @@ public class MainActivity extends AppCompatActivity
 
           landscape_label.setVisibility(View.GONE);
 
-          tmp.release();
-
         }
       }.execute(tmp);
 
       rectBuckts.clear();
+
     }
 
     return mRgba;
+
   }
 
   /**

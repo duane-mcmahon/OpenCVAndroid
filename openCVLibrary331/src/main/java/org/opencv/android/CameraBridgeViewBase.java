@@ -53,6 +53,8 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     public static final int CAMERA_ID_FRONT = 98;
     public static final int RGBA = 1;
     public static final int GRAY = 2;
+    private Mat modified;
+    private int count;
 
     public CameraBridgeViewBase(Context context, int cameraId) {
         super(context);
@@ -384,10 +386,11 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
      * @param frame - the current frame to be delivered
      */
     protected void deliverAndDrawFrame(CvCameraViewFrame frame) {
-        Mat modified;
+
 
         if (mListener != null) {
             modified = mListener.onCameraFrame(frame);
+
         } else {
             modified = frame.rgba();
         }
@@ -396,6 +399,11 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         if (modified != null) {
             try {
                 Utils.matToBitmap(modified, mCacheBitmap);
+                modified.release();
+                if (++count % 60 == 0) {
+                    System.gc();
+                    System.runFinalization();
+                }
             } catch(Exception e) {
                 Log.e(TAG, "Mat type: " + modified);
                 Log.e(TAG, "Bitmap type: " + mCacheBitmap.getWidth() + "*" + mCacheBitmap.getHeight());
@@ -428,6 +436,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                 getHolder().unlockCanvasAndPost(canvas);
             }
         }
+
     }
 
 
