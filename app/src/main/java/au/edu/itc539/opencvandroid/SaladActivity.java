@@ -116,6 +116,8 @@ public class SaladActivity extends AppCompatActivity
   private int mWidth, mHeight;
 
   private Point centre;
+
+  private boolean matched;
   // initialize and load the opencv libraries and modules
   private BaseLoaderCallback mLoaderCallback =
       new BaseLoaderCallback(this) {
@@ -337,7 +339,7 @@ public class SaladActivity extends AppCompatActivity
               // if both objects are detected consistently in five successive frames...
               if ((maxBananaDetections > 5)
                   && (maxOrangeDetections > 5)) {
-
+                matched = true;
                 new AsyncTask<Mat, Void, Bitmap>() {
                   @Override
                   protected Bitmap doInBackground(Mat... mats) {
@@ -387,9 +389,17 @@ public class SaladActivity extends AppCompatActivity
 
                 bananaBuckts.clear();
               }
+
+              if (!matched) {
+
+                tmp.release();
+
+              }
+
             }
           }
         };
+
     worker.start();
   }
 

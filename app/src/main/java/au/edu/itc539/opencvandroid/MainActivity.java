@@ -104,6 +104,8 @@ public class MainActivity extends AppCompatActivity
 
   private Point centre;
 
+  private boolean matched;
+
   private Detectable undetected;
   // initialize and load the opencv libraries and modules
   private BaseLoaderCallback mLoaderCallback =
@@ -387,6 +389,8 @@ public class MainActivity extends AppCompatActivity
     }
     if (maxDetections > 5) {
 
+      matched = true;
+
       new AsyncTask<Mat, Void, Bitmap>() {
         @Override
         protected Bitmap doInBackground(Mat... mats) {
@@ -424,12 +428,17 @@ public class MainActivity extends AppCompatActivity
 
           landscape_label.setVisibility(View.GONE);
 
-          tmp.release();
 
         }
       }.execute(tmp);
 
       rectBuckts.clear();
+
+    }
+    if (!matched) {
+
+      tmp.release();
+
     }
 
     return mRgba;
