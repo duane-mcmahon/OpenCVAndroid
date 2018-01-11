@@ -121,6 +121,8 @@ public class SaladActivity extends AppCompatActivity
   private int mWidth, mHeight;
 
   private Point centre;
+
+  private boolean matched;
   // initialize and load the opencv libraries and modules
   private BaseLoaderCallback mLoaderCallback =
       new BaseLoaderCallback(this) {
@@ -359,6 +361,8 @@ public class SaladActivity extends AppCompatActivity
               if ((maxBananaDetections >= 5)
                   && (maxOrangeDetections >= 5)) {
 
+                matched = true;
+
                 new AsyncTask<Mat, Void, Bitmap>() {
                   @Override
                   protected Bitmap doInBackground(Mat... mats) {
@@ -406,6 +410,11 @@ public class SaladActivity extends AppCompatActivity
                 orangeBuckts.clear();
 
                 bananaBuckts.clear();
+              }
+              if (!matched) {
+
+                tmp.release();
+
               }
             }
           }

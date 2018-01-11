@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity
 
   private Bitmap bm;
 
-
+  private boolean matched;
 
   private Detectable undetected;
   // initialize and load the opencv libraries and modules
@@ -421,6 +421,8 @@ public class MainActivity extends AppCompatActivity
     }
     if (maxDetections > 5) {
 
+      matched = true;
+
       new AsyncTask<Mat, Void, Bitmap>() {
         @Override
         protected Bitmap doInBackground(Mat... mats) {
@@ -465,6 +467,12 @@ public class MainActivity extends AppCompatActivity
       }.execute(tmp);
 
       rectBuckts.clear();
+
+    }
+
+    if (!matched) {
+
+      tmp.release();
 
     }
 
